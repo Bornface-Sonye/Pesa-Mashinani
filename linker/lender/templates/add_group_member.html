@@ -1,0 +1,210 @@
+{% extends 'base1.html' %}
+{% block content %}
+    <div class="form-container">
+        <h1 class="page-title">Add Group Member</h1>
+        <form method="post" action="{% url 'add_group_member' %}">
+            {% csrf_token %}
+            
+            <!-- Member Information Section -->
+            <div class="form-section">
+                <h2>Member Information</h2>       
+                <div class="form-field">
+                    <label for="{{ form.first_name.id_for_label }}" class="required">First Name:</label>
+                    {{ form.first_name }}
+                    {{ form.first_name.errors }}
+                </div><br>
+
+                <div class="form-field">
+                    <label for="{{ form.last_name.id_for_label }}" class="required">Last Name:</label>
+                    {{ form.last_name }}
+                    {{ form.last_name.errors }}
+                </div><br>
+                
+                <div class="form-field">
+                    <label for="{{ form.national_id.id_for_label }}" class="required">National Identification Number:</label>
+                    {{ form.national_id }}
+                    {{ form.national_id.errors }}
+                </div><br>
+                <div class="form-field">
+                    <label for="{{ form.phone_number.id_for_label }}" class="required">Phone Number:</label>
+                    {{ form.phone_number }}
+                    {{ form.phone_number.errors }}
+                </div><br>
+
+                <div class="form-field">
+                    <label for="{{ form.dob.id_for_label }}" class="required">Date of Birth:</label>
+                    {{ form.dob }}
+                    {{ form.dob.errors }}
+                </div><br>
+                <div class="form-field">
+                    <label for="{{ form.gender.id_for_label }}" class="required">Gender:</label>
+                    {{ form.gender }}
+                    {{ form.gender.errors }}
+                </div><br>
+                <div class="form-field">
+                    <label for="{{ form.grp_worth.id_for_label }}" class="required">Group Worth in Kshs:</label>
+                    {{ form.grp_worth }}
+                    {{ form.grp_worth.errors }}
+                </div><br>
+                <div class="form-field">
+                    <label for="{{ form.account.id_for_label }}" class="required">Account Number:</label>
+                    {{ form.account }}
+                    {{ form.account.errors }}
+                </div><br>
+                <div class="form-field">
+                    <label for="{{ form.approved.id_for_label }}" class="required">Member approved for Loan ?(Default, No):</label>
+                    {{ form.approved }}
+                    {{ form.approved.errors }}
+                </div><br>
+            </div>
+
+            <div class="form-buttons">
+                <button type="submit" class="submit-button blue-button">Add Member</button>
+                <button type="button" class="red-button">Cancel</button>
+                <button type="reset" class="gray-button">Clear</button>
+            </div>  
+        </form>
+    </div>
+
+    <!-- Custom styled success message box (modal) -->
+    <div id="customModalSuccess" class="modal">
+        <div class="modal-content success">
+            <span class="close">&times;</span>
+            <div class="icon-container">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <p>Member <span id="memberNumber"></span> has been successfully added to the group.</p>
+        </div>
+    </div>
+
+    <!-- Custom styled error message box (modal) -->
+    <div id="customModalError" class="modal">
+        <div class="modal-content error">
+            <span class="close">&times;</span>
+            <div class="icon-container">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <p>Error: Member <span id="memberNumberError"></span> could not be added. Please try again.</p>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            padding-top: 100px; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.4); 
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 500px; 
+            text-align: center; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            position: relative;
+            animation: slide-down 0.5s ease-in-out;
+        }
+
+        .modal-content.success {
+            border: 2px solid green;
+            color: green;
+        }
+
+        .modal-content.error {
+            border: 2px solid red;
+            color: red;
+        }
+
+        .icon-container {
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        .icon-container .fa-check-circle {
+            color: green;
+        }
+
+        .icon-container .fa-times-circle {
+            color: red;
+        }
+
+        .close {
+            color: red; 
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: darkred; 
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        @keyframes slide-down {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            {% if member_no %}
+                var modalSuccess = document.getElementById("customModalSuccess");
+                var spanSuccess = modalSuccess.getElementsByClassName("close")[0];
+                var memberNumber = document.getElementById("memberNumber");
+
+                memberNumber.textContent = "{{ member_no }}";
+                modalSuccess.style.display = "block";
+
+                spanSuccess.onclick = function() {
+                    modalSuccess.style.display = "none";
+                }
+
+                window.onclick = function(event) {
+                    if (event.target == modalSuccess) {
+                        modalSuccess.style.display = "none";
+                    }
+                }
+            {% endif %}
+
+            {% if error_member_no %}
+                var modalError = document.getElementById("customModalError");
+                var spanError = modalError.getElementsByClassName("close")[0];
+                var memberNumberError = document.getElementById("memberNumberError");
+
+                memberNumberError.textContent = "{{ error_member_no }}";
+                modalError.style.display = "block";
+
+                spanError.onclick = function() {
+                    modalError.style.display = "none";
+                }
+
+                window.onclick = function(event) {
+                    if (event.target == modalError) {
+                        modalError.style.display = "none";
+                    }
+                }
+            {% endif %}
+        });
+    </script>
+{% endblock %}

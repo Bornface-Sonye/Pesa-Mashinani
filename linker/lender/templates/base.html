@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESA MASHINANI</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- Include Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" crossorigin="anonymous">
+    <link rel="icon" href="{% static 'img/logo.ico' %}" type="image/x-icon">
+    <!-- Link to the stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            position: fixed;
+            width: 100%;
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000;
+        }
+        header.fixed {
+            transform: translateY(-100%);
+        }
+        main {
+            margin-top: 70px; /* Adjust this value based on your header height */
+            padding: 20px;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        .social-icons {
+            display: flex;
+            justify-content: center;
+        }
+        .social-icons a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .slider {
+            width: 1400px;
+            height: 800px;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+          }
+          
+          .slider img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+          }
+          
+          .slider img.active {
+            opacity: 1;
+          }
+          .text{
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: aliceblue;
+            color: darkolivegreen;
+          }
+    </style>
+</head>
+
+<body>
+    <div id="wrapper">
+        <header id="header">
+            <nav>
+                <ul>
+                    <h1 style="margin-right: 50px;">PESA MASHINANI</h1>
+                    <li style="margin-right: 50px;"><a href="#home"><i class="fas fa-home"></i><br>Home</a></li>
+                    <li style="margin-right: 50px;"><a href="{% url 'register_user' %}"><i class="fas fa-university"></i><br>Bank</a></li>
+                    <li style="margin-right: 50px;"><a href="{% url 'register_user' %}"><i class="fas fa-users"></i><br>Group</a></li>
+                    <li style="margin-right: 50px;"><a href="{% url 'register_user' %}"><i class="fas fa-user"></i><br>Borrower</a></li>
+                    <li style="margin-right: 50px;"><a href="#about"><i class="fas fa-info-circle"></i><br>About Us</a></li>
+                    <li style="margin-right: 50px;"><a href="#contact"><i class="fas fa-envelope"></i><br>Contact Us</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <footer id="footer">
+        <div class="social-icons">
+            <p style="margin-right: 50px;">&copy; 2024 <br><br>All Rights Reserved</p>
+            <a style="margin-right: 50px;" href="https://www.facebook.com/BornfaceSonye" target="_blank"><i class="fab fa-facebook"></i><br>Facebook</a>
+            <a style="margin-right: 50px;" href="https://wa.me/254798073204?text=Hello%2C%20I%27m%20interested%20in%20your%20services" target="_blank"><i class="fab fa-whatsapp"></i><br>WhatsApp</a>
+            <a style="margin-right: 50px;" href="#"><i class="fab fa-twitter"></i><br>Twitter</a>
+            <a style="margin-right: 50px;" href="#"><i class="fab fa-tiktok"></i><br>TikTok</a>
+            <a style="margin-right: 50px;" href="#"><i class="fab fa-youtube"></i><br>YouTube</a>
+            <a style="margin-right: 50px;" href="#"><i class="fab fa-instagram"></i><br>Instagram</a>
+        </div>
+    </footer>
+
+    <script>
+       // JavaScript to handle header position
+window.addEventListener('scroll', function() {
+    var header = document.querySelector('header');
+    var scrollPosition = window.scrollY;
+
+    // Adjust header position
+    if (scrollPosition > 50) {
+        header.classList.add('fixed');
+    } else {
+        header.classList.remove('fixed');
+    }
+});
+
+    </script>
+</body>
+
+</html>

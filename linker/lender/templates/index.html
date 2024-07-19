@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <style>
+        section {
+            min-height: 300px; /* Adjust this value as needed */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+
+    <section id="home" class="container">
+        <h2>Trust is the currency that underpins every Loan</h2><br>
+        <p>Welcome to<span class="highlight-text"> Pesa Mashinani</span>, where <span class="highlight-text">Trust Meets Opportunity</span></p>
+    </section>
+
+    <section id="about" class="container">
+        <h2>About Us</h2><br>
+        <h2>Your indispensable financial collaborator.</h2>
+        <p> Empower women and youth, forge a path towards financial resilience and prosperity.</p><br>
+    </section>
+
+    <section id="contact" class="container">
+        <h2>Contact Us</h2><br>
+        <div class="contact-info">
+            <p><span class="icon">&#9742;</span> 0798073204</p>
+            <p><span class="icon">&#9993;</span> bornfacesonye@gmail.com</p>
+        </div>
+    </section>
+
+    <section id="newsletter" class="container">
+        <h2>Subscribe to Our Newsletter</h2><br>
+        <form action="#" method="post">
+            <input type="email" placeholder="Enter your email address" required class="input-email">
+            <button type="submit" class="subscribe-btn">Subscribe</button>
+        </form>
+    </section>
+{% endblock %}

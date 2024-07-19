@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Members</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha384-DyZ88mC6Up2uqS2hK9QeWtr+4a0sW3k5DXRzA4vY7TQIiUU0C5Hn3Ua0yxyUtI1c" crossorigin="anonymous">
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+        }
+        .actions a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Group Members</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Member No</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>National ID</th>
+                <th>Phone Number</th>
+                <th>Date of Birth</th>
+                <th>Gender</th>
+                <th>Group Worth in Kshs</th>
+                <th>Account Number</th>
+                <th>Member approved for Loan ?</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in members %}
+                <tr>
+                    <td>{{ member.member_no }}</td>
+                    <td>{{ member.first_name }}</td>
+                    <td>{{ member.last_name }}</td>
+                    <td>{{ member.national_id }}</td>
+                    <td>{{ member.phone_number }}</td>
+                    <td>{{ member.dob }}</td>
+                    <td>{{ member.gender }}</td>
+                    <td>{{ member.grp_worth }}</td>
+                    <td>{{ member.account }}</td>
+                    <td>{{ member.approved }}</td>
+                    <td class="actions">
+                        <a href="{% url 'update_member' member.pk %}">Update</a>
+                        <a href="{% url 'delete_member' member.pk %}">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

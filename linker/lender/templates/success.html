@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Success</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif; /* Use appropriate font */
+            text-align: center; /* Center align the content */
+            background-color: #f0f0f0; /* Example background color */
+        }
+
+        .container {
+            margin: 20px auto; /* Center the container */
+            max-width: 600px; /* Limit maximum width */
+            padding: 20px;
+            background-color: #fff; /* Example background color */
+            border-radius: 8px; /* Rounded corners for container */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Example shadow effect */
+        }
+
+        .success-container {
+            margin-top: 30px; /* Space between heading and container */
+        }
+
+        .success-title {
+            font-size: 24px; /* Larger heading font size */
+            color: #333; /* Darker text color */
+        }
+
+        .serial-number {
+            font-size: 18px; /* Smaller font size */
+            color: #666; /* Lighter text color */
+            margin-bottom: 20px; /* Space below the paragraph */
+        }
+
+        .username {
+            font-family: 'Times New Roman', serif; /* Example different font for username */
+            font-style: italic; /* Example italic style */
+        }
+
+        .return-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff; /* Example button color */
+            color: #fff; /* Button text color */
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .return-button:hover {
+            background-color: #0056b3; /* Example hover color */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registration Successful</h1>
+        <div class="success-container">
+            <h2 class="success-title">User Registered Successfully!</h2>
+            <p class="serial-number">Your Username is, <span class="username">{{ username }}</span></p>
+            <a href="{% url 'home' %}" class="return-button">Return to Home</a>
+        </div>
+    </div>
+</body>
+</html>

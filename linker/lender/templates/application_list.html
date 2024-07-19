@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Applications</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Loan Applications</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Application No</th>
+                <th>Borrower No</th>
+                <th>Amount</th>
+                <th>Proposed Amount</th>
+                <th>Application Date</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for application in applications %}
+                <tr>
+                    <td>{{ application.application_no }}</td>
+                    <td>{{ application.borrower_no }}</td>
+                    <td>{{ application.loan_amount }}</td>
+                    <td>{{ application.proposed_amount }}</td>
+                    <td>{{ application.application_date }}</td>
+                    <td><a href="{% url 'disbursement' application.application_no %}">Disburse</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Group Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .header {
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h2 {
+            margin: 0;
+        }
+        .container {
+            width: 60%;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .link-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .link-list li {
+            margin: 10px 0;
+        }
+        .link-list a {
+            display: block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .link-list a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Welcome, {{ username }}</h2>
+    </div>
+    <div class="container">
+        <h1>Group Admin Dashboard</h1>
+        <ul class="link-list">
+            <li><a href="{% url 'apply_for_loan' %}">Apply for Loan</a></li>
+            <li><a href="{% url 'lend_loan' %}">Lend Loan</a></li>
+            <li><a href="{% url 'pay_loan' %}">Pay Loan</a></li>
+            <li><a href="{% url 'view_transactions' %}">View Transactions</a></li>
+            <li><a href="{% url 'add_member' %}">Add Members</a></li>
+            <li><a href="{% url 'remove_member' %}">Remove Members</a></li>
+            <li><a href="{% url 'view_members_list' %}">View Members List</a></li>
+            <li><a href="{% url 'view_member_loan_list' %}">View Member Loan List</a></li>
+            <li><a href="{% url 'update_member_loan' %}">Update Member Loan Details</a></li>
+            <li><a href="{% url 'logout' %}">Log Out</a></li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Member</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0; /* Light gray background */
+        }
+        .container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        form {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background-color: #ffffff; /* White background */
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Soft shadow */
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333333; /* Dark gray text */
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        .form-field {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555555; /* Medium gray text */
+        }
+        input[type="text"], input[type="number"], select {
+            width: calc(100% - 12px);
+            padding: 8px;
+            border: 1px solid #cccccc; /* Light gray border */
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .submit-button {
+            background-color: #007bff; /* Blue button */
+            color: #ffffff; /* White text */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .submit-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
+            <!-- Member Information Section -->
+            <div class="form-section">
+                <h1>Update Member</h1>
+                <h2>Member Information</h2> 
+                <h1>Update Member</h1>
+                <h2>Member Information</h2> 
+                <div class="form-field">
+                    <label for="{{ form.member_no.id_for_label }}" class="required">Member Number:</label>
+                    {{ form.member_no }}
+                    {{ form.member_no.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.first_name.id_for_label }}" class="required">First Name:</label>
+                    {{ form.first_name }}
+                    {{ form.first_name.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.last_name.id_for_label }}" class="required">Last Name:</label>
+                    {{ form.last_name }}
+                    {{ form.last_name.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.national_id.id_for_label }}" class="required">National Identification Number:</label>
+                    {{ form.national_id }}
+                    {{ form.national_id.errors }}
+                    
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.phone_number.id_for_label }}" class="required">Phone Number:</label>
+                    {{ form.phone_number }}
+                    {{ form.phone_number.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.dob.id_for_label }}" class="required">Date of Birth:</label>
+                    {{ form.dob }}
+                    {{ form.dob.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.gender.id_for_label }}" class="required">Gender:</label>
+                    {{ form.gender }}
+                    {{ form.gender.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.group.id_for_label }}" class="required">Group:</label>
+                    {{ form.group }}
+                    {{ form.group.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.grp_worth.id_for_label }}" class="required">Group Worth in Kshs:</label>
+                    {{ form.grp_worth }}
+                    {{ form.grp_worth.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.account.id_for_label }}" class="required">Account Number:</label>
+                    {{ form.account }}
+                    {{ form.account.errors }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.approved.id_for_label }}" class="required">Member approved for Loan ?(Default, No):</label>
+                    {{ form.approved }}
+                    {{ form.approved.errors }}
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="submit" class="submit-button">Save changes</button>
+            </div>  
+        </form>
+    </div>
+</body>
+</html>
