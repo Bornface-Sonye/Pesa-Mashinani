@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Defaulter</title>
+</head>
+<body>
+    <h1>Add Defaulter</h1>
+    {% if success_message %}
+        <p style="color: green;">{{ success_message }}</p>
+    {% endif %}
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Defaulter</button>
+    </form>
+    {% if error_national_id %}
+        <p style="color: red;">Defaulter with National ID {{ error_national_id }} already exists.</p>
+    {% endif %}
+</body>
+</html>
+

@@ -30,7 +30,7 @@ class BorrowerForm(forms.ModelForm):
     
     class Meta:
         model = Borrower
-        fields = ['borrower_type', 'national_id', 'dor', 'email_address']
+        fields = ['borrower_type', 'national_id', 'email_address']
         labels = {
             'national_id': 'National Identification Number',
             'email_address': 'Email Address',
@@ -255,16 +255,14 @@ class LenderForm(forms.ModelForm):
     
     class Meta:
         model = Lender
-        fields = ['lender_type', 'email_address', 'lender_id_no', 'dor', 'account_no']
+        fields = ['lender_type', 'email_address', 'lender_id_no', 'account_no']
         labels = {
             'email_address': 'Email Address',
             'lender_id_no': 'Identification Number',
-            'dor': 'Date of Registration',
         }
         widgets = {
             'email_address': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter Email Address'}),
-            'lender_id_no': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Identification Identification Number'}),
-            'dor': forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'Enter Date of Registration'}),   
+            'lender_id_no': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Identification Identification Number'}),   
         }
         
 
@@ -500,5 +498,22 @@ class PaymentForm(forms.ModelForm):
             'payment_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Amount'}),
         }
         
+from django import forms
+from .models import Defaulter
+
+class DefaulterForm(forms.ModelForm):
+    class Meta:
+        model = Defaulter
+        fields = ['national_id', 'lender_no', 'amount_owed']
+        widgets = {
+            'submission_date': forms.HiddenInput(),
+        }
 
 
+from django import forms
+from .models import Defaulter
+
+class DefaulterUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Defaulter
+        fields = ['amount_owed']

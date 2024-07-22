@@ -6,7 +6,7 @@ from .views import (
     AllocationView, RequestsView, TransactionsView, ApplicationView, DisbursementView, PaymentView, GroupDashboardView, 
     AllocationsView, MemberListView, BankLoginView, GroupLoginView, BorrowerLoginView, BankSignUpView,
     BorrowerSignUpView, GroupSignUpView, AddGroupMemberView, MemberUpdateView, MemberDeleteView, AddGroupMemberView, 
-    GroupAllocationView, GroupApplicationView, GroupAllocationsView
+    GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, DefaulterDeleteView
 )
 
 urlpatterns = [
@@ -30,6 +30,10 @@ urlpatterns = [
     path('borrower/', Borrower_Dashboard_View.as_view(), name='borrower'),
     path('group/', Group_Dashboard_View.as_view(), name='group'),
     path('bank/', Bank_Dashboard_View.as_view(), name='bank'),
+    path('defaulters/', DefaulterListView.as_view(), name='defaulter_list'),
+    path('defaulters/add/', DefaultersView.as_view(), name='add_defaulter'),
+    path('defaulters/update/<int:pk>/', DefaulterUpdateView.as_view(), name='defaulter_update'),
+    path('defaulters/delete/<int:pk>/', DefaulterDeleteView.as_view(), name='defaulter_delete'),
     path('group/logout/', grouplogout, name='grouplogout'),
     path('bank/logout/', banklogout, name='banklogout'),
     path('borrower/logout/', borrowerlogout, name='borrowerlogout'),

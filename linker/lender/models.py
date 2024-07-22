@@ -81,14 +81,8 @@ class Borrower(models.Model):
     borrower_type = models.CharField(max_length=20, choices=BORROWER_TYPE_CHOICES)
     email_address = models.EmailField(max_length=30, unique=True, help_text="Enter Email Address:")
     national_id = models.DecimalField(max_digits=8, decimal_places=0, unique=True, validators=[validate_kenyan_id], help_text="Enter National Identification Number:")
-    dor = models.DateField(help_text="Enter Date of Registration")
     borrower_no = models.CharField(max_length=100, help_text="Enter Borrower Number:", blank=True)
     username = models.CharField(max_length=50, help_text="Enter Borrower Username", blank=True)
-    
-    def calculate_age(self):
-        today = date.today()
-        age = today.year - self.dor.year - ((today.month, today.day) < (self.dor.month, self.dor.day))
-        return age
 
     def __str__(self):
         return f"{self.username}"
@@ -104,16 +98,10 @@ class Lender(models.Model):
     lender_type = models.CharField(max_length=20, choices=LENDER_TYPE_CHOICES)
     email_address = models.EmailField(unique=True, max_length=50, help_text="Enter Email Address")
     lender_id_no = models.DecimalField(max_digits=8, decimal_places=0, unique=True, validators=[validate_lender_id],help_text="Enter Identification Number:")
-    dor = models.DateField(help_text="Enter Date of Registration")
     lender_no = models.CharField(max_length=100, help_text="Enter Lender Number:", blank=True)
     account_no = models.ForeignKey(Account, on_delete=models.CASCADE, help_text="Choose Account Number")
     username = models.CharField(max_length=50, help_text="Enter Username", blank=True)
     
-    def calculate_age(self):
-        today = date.today()
-        age = today.year - self.dor.year - ((today.month, today.day) < (self.dor.month, self.dor.day))
-        return age
-
     def __str__(self):
         return f"{self.username}"
 
