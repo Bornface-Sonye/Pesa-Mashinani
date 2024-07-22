@@ -25,7 +25,31 @@ from django.urls import reverse_lazy
 from .forms import ApplicationForm
 from .models import Application
 
+from django.shortcuts import render, get_object_or_404
+from django.views.generic.edit import FormView
+from .forms import ApplicationForm
+from .models import GroupMember, Group, Borrower, Allocation, Account, GroupLender
+from django.urls import reverse_lazy
+from datetime import datetime
 
+from django.shortcuts import render, redirect
+from django.views.generic.edit import FormView
+from django.urls import reverse_lazy
+from .forms import ApplicationForm
+from .models import Allocation, Application, Borrower, GroupMember, Group, Account, GroupLender
+from datetime import datetime
+import random
+from django.views.generic import TemplateView
+import string
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views import View
+from django.contrib import messages
+from .models import Defaulter
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views import View
+from django.contrib import messages
+from .models import Defaulter
+from .forms import DefaulterUpdateForm
 
 import string
 import random
@@ -45,6 +69,13 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, Paragraph
+
+from django.shortcuts import render, redirect
+from django.views import View
+from .forms import BorrowerForm
+from .models import GroupMember
+from datetime import datetime
+from .utils import generate_borrower_username, generate_unique_borrower_number
 
 
 import random
@@ -101,10 +132,7 @@ class TemplateView(View):
     def get(self,request):
         return render(request, 'success.html')  
     
-     
-
-
-from django.views.generic import TemplateView
+    
 
 class SuccessView(TemplateView):
     template_name = 'success.html'
@@ -128,12 +156,7 @@ class UserCreateView(CreateView):
         return super().form_valid(form)
 
 
-from django.shortcuts import render, redirect
-from django.views import View
-from .forms import BorrowerForm
-from .models import GroupMember
-from datetime import datetime
-from .utils import generate_borrower_username, generate_unique_borrower_number
+
 
 class BorrowerCreateView(View):
     template_name = 'register_borrower.html'
@@ -320,11 +343,6 @@ class BorrowerGroupCreateView(CreateView):
         context['borrower_id'] = self.kwargs['borrower_id']
         return context
 
-from datetime import datetime
-from django.shortcuts import render, redirect
-from django.views import View
-from .forms import LenderForm
-from .models import Lender, Account
 
 class LenderCreateView(View):
     template_name = 'register_lender.html'
@@ -649,14 +667,6 @@ class Group_Dashboard_View(View):
 
 
 
-
-from django.shortcuts import render, redirect
-from django.views import View
-from .forms import GroupMemberForm
-from .models import System_User, Borrower, Group, GroupMember, Defaulter
-import random
-import string
-
 class AddGroupMemberView(View):
     def get(self, request):
         username = request.session.get('username')
@@ -745,13 +755,6 @@ class AddGroupMemberView(View):
             if not GroupMember.objects.filter(member_no=member_no).exists():
                 return member_no
 
-
-
-
-
-from django.shortcuts import render, redirect
-from django.views.generic import ListView
-from .models import System_User, Group, GroupMember
 
 class MemberListView(ListView):
     template_name = 'member_list.html'
@@ -846,12 +849,6 @@ class Bank_Dashboard_View(View):
         return render(request, 'bank.html', {'user': user, 'lender_no': lender_no})
 
 
-from datetime import datetime
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import Defaulter
-from .forms import DefaulterForm
-
 class DefaultersView(View):
     template_name = 'defaulter.html'
 
@@ -890,10 +887,6 @@ class DefaultersView(View):
         return render(request, self.template_name, {'form': form})
 
 
-from django.shortcuts import render
-from django.views import View
-from .models import Defaulter
-
 class DefaulterListView(View):
     template_name = 'defaulter_list.html'
 
@@ -902,10 +895,6 @@ class DefaulterListView(View):
         return render(request, self.template_name, {'defaulters': defaulters})
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from .models import Defaulter
-from .forms import DefaulterUpdateForm
 
 class DefaulterUpdateView(View):
     template_name = 'defaulter_update.html'
@@ -915,7 +904,11 @@ class DefaulterUpdateView(View):
         if not lender_no:
             return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
 
-        defaulter = get_object_or_404(Defaulter, pk=pk, lender_no=lender_no)
+        defaulter = get_object_or_404(Defaulter, pk=pk)
+        if defaulter.lender_no != lender_no:
+            messages.error(request, 'You have no privilege to update the details of this defaulter.')
+            return redirect('defaulter_list')  # Redirect to the defaulter list if lender_no does not match
+
         form = DefaulterUpdateForm(instance=defaulter)
         return render(request, self.template_name, {'form': form, 'defaulter': defaulter})
 
@@ -924,17 +917,20 @@ class DefaulterUpdateView(View):
         if not lender_no:
             return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
 
-        defaulter = get_object_or_404(Defaulter, pk=pk, lender_no=lender_no)
+        defaulter = get_object_or_404(Defaulter, pk=pk)
+        if defaulter.lender_no != lender_no:
+            messages.error(request, 'You have no privilege to update the details of this defaulter.')
+            return redirect('defaulter_list')  # Redirect to the defaulter list if lender_no does not match
+
         form = DefaulterUpdateForm(request.POST, instance=defaulter)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Defaulter details successfully updated.')
             return redirect('defaulter_list')  # Redirect to the defaulter list after updating
 
         return render(request, self.template_name, {'form': form, 'defaulter': defaulter})
 
-from django.shortcuts import redirect, get_object_or_404
-from django.views import View
-from .models import Defaulter
+
 
 class DefaulterDeleteView(View):
 
@@ -943,19 +939,16 @@ class DefaulterDeleteView(View):
         if not lender_no:
             return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
 
-        defaulter = get_object_or_404(Defaulter, pk=pk, lender_no=lender_no)
+        defaulter = get_object_or_404(Defaulter, pk=pk)
+        if defaulter.lender_no != lender_no:
+            messages.error(request, 'You have no privilege to delete this defaulter.')
+            return redirect('defaulter_list')  # Redirect to the defaulter list if lender_no does not match
+
         defaulter.delete()
+        messages.success(request, 'Defaulter successfully deleted.')
         return redirect('defaulter_list')  # Redirect to the defaulter list after deleting
 
 
-
-from django.shortcuts import render, redirect
-from django.views import View
-from .forms import AllocationForm
-from .models import Allocation, Lender, Account
-from datetime import datetime
-import random
-import string
 
 class AllocationView(View):
     template_name = 'allocation.html'
@@ -1147,21 +1140,7 @@ class GroupAllocationsView(ListView):
     context_object_name = 'allocations'        
 
 
-from django.shortcuts import render, get_object_or_404
-from django.views.generic.edit import FormView
-from .forms import ApplicationForm
-from .models import GroupMember, Group, Borrower, Allocation, Account, GroupLender
-from django.urls import reverse_lazy
-from datetime import datetime
 
-from django.shortcuts import render, redirect
-from django.views.generic.edit import FormView
-from django.urls import reverse_lazy
-from .forms import ApplicationForm
-from .models import Allocation, Application, Borrower, GroupMember, Group, Account, GroupLender
-from datetime import datetime
-import random
-import string
 
 class ApplicationView(FormView):
     form_class = ApplicationForm
@@ -1587,13 +1566,6 @@ class DisbursementView(View):
             message_no = letters + digits
             if not Message.objects.filter(message_no=message_no).exists():
                 return message_no
-
-
- 
-          
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import Allocation, Application, Disbursement, Payment
 
 class TransactionsView(View):
     def get(self, request):
