@@ -95,14 +95,15 @@ from django.contrib.auth.models import User
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
     CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, System_User,
-    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter
+    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan
 )
 
 
 from .forms import BorrowerForm, EntrepreneurForm, CivilServantForm, EmployeeForm, UnemployedForm, GroupForm
 from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementForm, GroupMemberForm
 from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm
-from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm
+from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm, DefaulterForm,  DefaulterUpdateForm
+   
 
 def grouplogout(request):
     if request.method == 'POST':
@@ -477,6 +478,7 @@ class BorrowerSignUpView(View):
 
         if form.is_valid():
             borrower_no = form.cleaned_data['borrower_no']
+            lender_no = form.cleaned_data['borrower_no']
             username = form.cleaned_data['username']
             password_hash = form.cleaned_data['password_hash']
 
@@ -507,6 +509,7 @@ class BankSignUpView(View):
 
         if form.is_valid():
             lender_no = form.cleaned_data['lender_no']
+            borrower_no = form.cleaned_data['lender_no']
             username = form.cleaned_data['username']
             password_hash = form.cleaned_data['password_hash']
 

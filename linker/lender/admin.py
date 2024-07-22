@@ -2,13 +2,13 @@ from django.contrib import admin
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
     CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, Application, 
-    Disbursement, Payment, System_User, Guarantor, County, Account, GroupMember, Message, Defaulter
+    Disbursement, Payment, System_User, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan
 )
 
 models_to_register = [
    Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
    CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, Application, 
-   Disbursement, Payment, System_User, Guarantor, County, Account, GroupMember, Message, Defaulter
+   Disbursement, Payment, System_User, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan
     
 ]
 

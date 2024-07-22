@@ -1,11 +1,10 @@
 from django import forms
 import re
 from django.contrib.auth.models import User
-
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
     CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, System_User,
-    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter
+    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan
 )
 
 class UserForm(forms.ModelForm):
@@ -498,8 +497,6 @@ class PaymentForm(forms.ModelForm):
             'payment_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Amount'}),
         }
         
-from django import forms
-from .models import Defaulter
 
 class DefaulterForm(forms.ModelForm):
     class Meta:
@@ -510,8 +507,7 @@ class DefaulterForm(forms.ModelForm):
         }
 
 
-from django import forms
-from .models import Defaulter
+
 
 class DefaulterUpdateForm(forms.ModelForm):
     class Meta:

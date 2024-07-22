@@ -65,7 +65,7 @@ from django.contrib.auth.models import User
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
     CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, System_User,
-    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message
+    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan
 )
 
 
