@@ -155,7 +155,7 @@ class Guarantor(models.Model):
         return age
 
     def __str__(self):
-        return f"Guarantor - {self.guarantor_no}"
+        return f"Guarantor - {self.email_address}"
 
 
 
@@ -219,7 +219,7 @@ class BorrowerGroup(models.Model):
 class Message(models.Model):
     message_id = models.AutoField(primary_key=True, unique=True)
     message_no = models.CharField(max_length=50, help_text="Enter Message Number")
-    sender_usename = models.CharField(max_length=50, help_text="Enter Sender Username")
+    sender_username = models.CharField(max_length=50, help_text="Enter Sender Username")
     recipient_username = models.CharField(max_length=50, help_text="Enter Recipient Username")
     message_name = models.CharField(max_length=50, help_text="Enter Message Name")
     message_description = models.CharField(max_length=50, help_text="Enter Message Description")
@@ -382,7 +382,7 @@ class Payment(models.Model):
         return f"Payment - {self.payment_no}"
     
     
-class Loans(models.Model):
+class Loan(models.Model):
     payment_id = models.AutoField(primary_key=True, unique=True)
     payment_no = models.CharField(unique=True, max_length=30, help_text="Enter the Payment Number", blank=True)
     transaction_no = models.CharField(max_length=30, help_text="Enter the Transaction Number")

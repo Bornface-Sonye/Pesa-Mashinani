@@ -14,7 +14,16 @@
             <div class="form-field">
                 <label for="{{ form.amount.id_for_label }}" class="required">Amount:</label>
                 {{ form.amount }}
-                {{ form.amount.errors }}
+                {% if form.amount.errors %}
+                    <div class="error">{{ form.amount.errors }}</div>
+                {% endif %}
+            </div><br>
+            <div class="form-field">
+                <label for="{{ form.interest_rate.id_for_label }}" class="required">Interest Rate:</label>
+                {{ form.interest_rate }}
+                {% if form.interest_rate.errors %}
+                    <div class="error">{{ form.interest_rate.errors }}</div>
+                {% endif %}
             </div><br>
         </div>
 
@@ -25,6 +34,21 @@
         </div>            
     </form>
 </div>
+
+{% if form.errors %}
+    <div class="alert alert-danger">
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
 
 <!-- Custom styled success message box (modal) -->
 <div id="customModalSuccessAllocation" class="modal">
@@ -48,7 +72,6 @@
         <p>Regretfully, Allocation <span id="allocationNumberError"></span> already exists! Please use a different allocation number.</p>
     </div>
 </div>
-
 
 <style>
     .modal {
@@ -101,7 +124,7 @@
     }
     
     .close {
-        color: red; /* Red color for close button */
+        color: red; 
         position: absolute;
         top: 10px;
         right: 10px;
@@ -111,7 +134,7 @@
     
     .close:hover,
     .close:focus {
-        color: darkred; /* Darken the color on hover/focus if desired */
+        color: darkred; 
         text-decoration: none;
         cursor: pointer;
     }
@@ -126,49 +149,47 @@
             opacity: 1;
         }
     }
-    </style>
+</style>
 
-    
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            {% if allocation_no %}
-                var modalSuccess = document.getElementById("customModalSuccessAllocation");
-                var spanSuccess = modalSuccess.getElementsByClassName("close")[0];
-                var allocationNumber = document.getElementById("allocationNumber");
-                
-                allocationNumber.textContent = "{{ allocation_no }}";
-                modalSuccess.style.display = "block";
-    
-                spanSuccess.onclick = function() {
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if allocation_no %}
+            var modalSuccess = document.getElementById("customModalSuccessAllocation");
+            var spanSuccess = modalSuccess.getElementsByClassName("close")[0];
+            var allocationNumber = document.getElementById("allocationNumber");
+            
+            allocationNumber.textContent = "{{ allocation_no }}";
+            modalSuccess.style.display = "block";
+
+            spanSuccess.onclick = function() {
+                modalSuccess.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modalSuccess) {
                     modalSuccess.style.display = "none";
                 }
-    
-                window.onclick = function(event) {
-                    if (event.target == modalSuccess) {
-                        modalSuccess.style.display = "none";
-                    }
-                }
-            {% endif %}
-    
-            {% if error_allocation_no %}
-                var modalError = document.getElementById("customModalErrorAllocation");
-                var spanError = modalError.getElementsByClassName("close")[0];
-                var allocationNumberError = document.getElementById("allocationNumberError");
-                
-                allocationNumberError.textContent = "{{ error_allocation_no }}";
-                modalError.style.display = "block";
-    
-                spanError.onclick = function() {
+            }
+        {% endif %}
+
+        {% if error_allocation_no %}
+            var modalError = document.getElementById("customModalErrorAllocation");
+            var spanError = modalError.getElementsByClassName("close")[0];
+            var allocationNumberError = document.getElementById("allocationNumberError");
+            
+            allocationNumberError.textContent = "{{ error_allocation_no }}";
+            modalError.style.display = "block";
+
+            spanError.onclick = function() {
+                modalError.style.display = "none";
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modalError) {
                     modalError.style.display = "none";
                 }
-    
-                window.onclick = function(event) {
-                    if (event.target == modalError) {
-                        modalError.style.display = "none";
-                    }
-                }
-            {% endif %}
-        });
-    </script>
-    
+            }
+        {% endif %}
+    });
+</script>
 {% endblock %}

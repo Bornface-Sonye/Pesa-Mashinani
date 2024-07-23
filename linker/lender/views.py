@@ -24,6 +24,11 @@ from .models import Disbursement, Payment
 from django.urls import reverse_lazy
 from .forms import ApplicationForm
 from .models import Application
+from django import forms
+from django.db import models
+from django.db.models import Sum
+
+
 
 from django.shortcuts import render, get_object_or_404
 from django.views.generic.edit import FormView
@@ -135,12 +140,15 @@ class TemplateView(View):
     
     
 
+# views.py
+from django.views.generic import TemplateView
+
 class SuccessView(TemplateView):
     template_name = 'success.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['username'] = self.kwargs['username']  # Access username from self.kwargs
+        context['username'] = self.kwargs.get('username', 'default_value')  # Safely access username
         return context
 
     
@@ -189,7 +197,6 @@ class BorrowerCreateView(View):
             # Proceed with registration
             borrower = form.save(commit=False)
             borrower.username = username
-            borrower.dor = dor
             borrower.borrower_no = borrower_no
             borrower.save()
             
@@ -669,6 +676,11 @@ class Group_Dashboard_View(View):
         return render(request, 'group.html', {'user': user, 'borrower_no': borrower_no, 'lender_no': lender_no, 'group': group})
 
 
+from django.shortcuts import redirect, render
+from django.views import View
+from .models import GroupMember, System_User, Borrower, Group, Defaulter
+from .forms import GroupMemberForm
+from .utils import generate_unique_member_number  # Ensure this utility function is defined
 
 class AddGroupMemberView(View):
     def get(self, request):
@@ -677,20 +689,13 @@ class AddGroupMemberView(View):
             return redirect('group_login')  # Redirect to login if username is not in session
 
         try:
-            # Fetch the user and related details (borrower_no, lender_no, etc.)
             user = System_User.objects.get(username=username)
             borrower_no = user.borrower_no
             borrower = Borrower.objects.get(borrower_no=borrower_no)
-            # Fetch the group object using borrower_no
             group = Group.objects.get(borrower_no=borrower)
-        except System_User.DoesNotExist:
-            return redirect('group_login')
-        except Borrower.DoesNotExist:
-            return redirect('group_login')
-        except Group.DoesNotExist:
+        except (System_User.DoesNotExist, Borrower.DoesNotExist, Group.DoesNotExist):
             return redirect('group_login')
 
-        # Store necessary session data
         request.session['borrower_no'] = borrower_no
 
         form = GroupMemberForm()
@@ -704,59 +709,52 @@ class AddGroupMemberView(View):
     def post(self, request):
         form = GroupMemberForm(request.POST)
         username = request.session.get('username')
+        if not username:
+            return redirect('group_login')
+
         try:
-            # Fetch the user and related details (borrower_no, lender_no, etc.)
             user = System_User.objects.get(username=username)
             borrower_no = user.borrower_no
             borrower = Borrower.objects.get(borrower_no=borrower_no)
-            # Fetch the group object using borrower_no
             group = Group.objects.get(borrower_no=borrower)
-        except System_User.DoesNotExist:
-            return redirect('group_login')
-        except Borrower.DoesNotExist:
-            return redirect('group_login')
-        except Group.DoesNotExist:
+        except (System_User.DoesNotExist, Borrower.DoesNotExist, Group.DoesNotExist):
             return redirect('group_login')
 
         if form.is_valid():
             national_id = form.cleaned_data.get('national_id')
             if Defaulter.objects.filter(national_id=national_id).exists():
-                # If the national ID exists in the defaulters list, render form with an error message
                 return render(request, 'add_group_member.html', {
                     'form': form,
                     'error_message': 'This member is listed as a defaulter and cannot be added to the group.'
                 })
-            
+
             try:
-                # Save the form data to database
                 group_member = form.save(commit=False)
-                member_no = self.generate_unique_member_number()
-                group_member.member_no = member_no                
-                group_member.group = group  # Assuming group is the correct Group object
+                group_member.member_no = generate_unique_member_number()  # Assign generated member number
+                group_member.group = group  # Assign the group fetched from the session
                 group_member.save()
-                # On success, pass the member_no to the template
+
                 return render(request, 'add_group_member.html', {
                     'form': GroupMemberForm(),
-                    'member_no': member_no
+                    'member_no': group_member.member_no,
+                    'success_message': f'Member {group_member.member_no} added successfully.'
                 })
             except Exception as e:
-                # On error, pass the error_member_no to the template
                 return render(request, 'add_group_member.html', {
                     'form': form,
                     'error_message': 'An error occurred while adding the member. Please try again.'
                 })
+        else:
+            # Added detailed form errors for debugging
+            print(form.errors)  # Print form errors to console or log them for debugging
 
-        # If form is not valid, render the form again with errors
-        return render(request, 'add_group_member.html', {'form': form})
+        return render(request, 'add_group_member.html', {
+            'form': form,
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors)
+        })
 
-    def generate_unique_member_number(self):
-        # Generate a unique member number, e.g., using a similar approach to generate_message_no
-        while True:
-            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-            digits = ''.join(random.choices(string.digits, k=3))
-            member_no = letters + digits
-            if not GroupMember.objects.filter(member_no=member_no).exists():
-                return member_no
+
+
 
 
 class MemberListView(ListView):
@@ -796,7 +794,7 @@ class MemberListView(ListView):
 
 class MemberUpdateView(UpdateView):
     model = GroupMember
-    fields = ['member_no', 'first_name', 'last_name', 'national_id', 'phone_no', 'dob', 'gender', 'group', 'grp_worth', 'account', 'approved']
+    fields = ['member_no', 'first_name', 'last_name', 'national_id', 'phone_number', 'dob', 'gender', 'group', 'grp_worth', 'account', 'approved']
     widgets = {
             'gender': forms.RadioSelect(choices=GroupMember.GENDER_CHOICES),
         }
@@ -952,7 +950,6 @@ class DefaulterDeleteView(View):
         return redirect('defaulter_list')  # Redirect to the defaulter list after deleting
 
 
-
 class AllocationView(View):
     template_name = 'allocation.html'
 
@@ -967,12 +964,12 @@ class AllocationView(View):
     def post(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank_login')  # Redirect to the bank dashboard if lender_no is not in session
 
         form = AllocationForm(request.POST)
 
         if form.is_valid():
-            allocation_no = self.generate_unique_allocation_number()
+            allocation_no = unique_allocation_number()
             amount = form.cleaned_data['amount']
             allocation_date = datetime.now()  # Get current date and time
 
@@ -991,14 +988,6 @@ class AllocationView(View):
                 return render(request, self.template_name, {
                     'form': form,
                     'error_message': f'The allocated amount must be less than {account_balance - 2000}.'
-                })
-
-            # Check if the allocation number already exists
-            if Allocation.objects.filter(allocation_no=allocation_no).exists():
-                return render(request, self.template_name, {
-                    'form': form,
-                    'error_allocation_no': allocation_no,
-                    'error_message': 'Allocation number already exists. Please try again.'
                 })
 
             # Create and save the allocation
@@ -1027,8 +1016,14 @@ class AllocationView(View):
             })
 
         else:
+            print(form.errors)  # Print form errors to console or log them for debugging
+
             # If the form is not valid, return the template with the form
-            return render(request, self.template_name, {'form': form})
+            return render(request, self.template_name,  {
+                'form': AllocationForm(),
+                'allocation_no': allocation_no,
+                'error_message': 'Form Invalid. Errors: {}'.format(form.errors)
+            })
 
     def generate_unique_allocation_number(self):
         while True:
@@ -1054,7 +1049,7 @@ class GroupAllocationView(View):
     def get(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('group_dashboard')  # Redirect to the group dashboard if lender_no is not in session
+            return redirect('group_dashboard')
 
         form = AllocationForm(initial={'lender_no': lender_no})
         return render(request, self.template_name, {'form': form})
@@ -1062,57 +1057,38 @@ class GroupAllocationView(View):
     def post(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('group_dashboard')  # Redirect to the group dashboard if lender_no is not in session
+            return redirect('group_login')
 
         form = AllocationForm(request.POST)
 
         if form.is_valid():
             allocation_no = self.generate_unique_allocation_number()
             amount = form.cleaned_data['amount']
-            allocation_date = datetime.now()  # Get current date and time
+            allocation_date = datetime.now()
 
-            # Fetch the lender
             try:
                 lender = Lender.objects.get(lender_no=lender_no)
             except Lender.DoesNotExist:
                 return redirect('group_dashboard')
 
-            # Check if the allocation number already exists
-            if Allocation.objects.filter(allocation_no=allocation_no).exists():
-                return render(request, self.template_name, {
-                    'form': form,
-                    'error_allocation_no': allocation_no,
-                    'error_message': 'Allocation number already exists. Please try again.'
-                })
-
-            # Create and save the allocation
             allocation = form.save(commit=False)
-            allocation.allocation_no = allocation_no  # Assign the generated allocation number
-            allocation.allocation_date = allocation_date  # Assign current date and time
-            allocation.lender_no = lender_no  # Assign lender_no from session
+            allocation.allocation_no = allocation_no
+            allocation.allocation_date = allocation_date
+            allocation.lender_no = lender_no
             allocation.save()
-
-            # Create and save the message
-            message_no = self.generate_unique_message_number()
-            message = Message(
-                message_no=message_no,
-                sender_usename=lender.username,  # Assuming lender.username is the sender
-                recipient_username=lender.username,  # Assuming the recipient is also the lender
-                message_name='Group Allocation Notice',  # You can customize this
-                message_description=f'Allocation Number {allocation_no} of amount {amount} has been successfully processed for the group.',
-                message_date=allocation_date.date()  # Use only the date part
-            )
-            message.save()
 
             return render(request, self.template_name, {
                 'form': AllocationForm(),
                 'allocation_no': allocation_no,
                 'success_message': f'Allocation successful. Allocation Number: {allocation_no}'
             })
-
-        else:
-            # If the form is not valid, return the template with the form
-            return render(request, self.template_name, {'form': form})
+            
+               
+        print(form.errors)  # Print form errors to console or log them for debugging
+        return render(request, self.template_name, {
+            'form': form,
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
+        })
 
     def generate_unique_allocation_number(self):
         while True:
@@ -1129,6 +1105,8 @@ class GroupAllocationView(View):
             message_no = letters + digits
             if not Message.objects.filter(message_no=message_no).exists():
                 return message_no
+
+
 
         
 class AllocationsView(ListView):
@@ -1323,10 +1301,11 @@ class ApplicationView(FormView):
 
     def form_invalid(self, form):
         allocation_no = self.kwargs['allocation_no']
-        return render(self.request, self.template_name, {
+        print(form.errors)  # Print form errors to console or log them for debugging
+        return render(request, self.template_name, {
             'form': form,
             'allocation_no': allocation_no,
-            'error_message': 'There was an error with your application. Please correct the errors.'
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
         })
 
     def generate_unique_message_number(self):
@@ -1342,20 +1321,30 @@ class ApplicationView(FormView):
 
         
 
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse_lazy
+from django.views.generic.edit import FormView
+from django.utils import timezone
+from django.db.models import Sum
+import random
+import string
+
+from .models import Application, Allocation, Borrower, Group, Lender, Message
+from .forms import ApplicationForm
+
 class GroupApplicationView(FormView):
     form_class = ApplicationForm
     template_name = 'application.html'
-    
+
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         allocation_no = self.kwargs['allocation_no']
-        
         borrower_no = self.request.session.get('borrower_no', None)
         
         kwargs['initial'] = {
             'allocation_no': allocation_no,
             'application_no': unique_application_number(),
-            'application_date': datetime.now().date(),
+            'application_date': timezone.now().date(),
             'borrower_no': borrower_no
         }
         return kwargs
@@ -1373,55 +1362,54 @@ class GroupApplicationView(FormView):
         allocation_no = self.kwargs['allocation_no']
         application_no = unique_application_number()
         borrower_no = self.request.session.get('borrower_no', None)
-        
-        # Retrieve the group based on borrower_no
-        group = get_object_or_404(Group, borrower_no=borrower_no)
-        
+
+        # Retrieve the Borrower instance based on borrower_no
+        borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
+
+        # Retrieve the Group instance based on Borrower instance
+        group = get_object_or_404(Group, borrower_no=borrower)
+
         # Retrieve the account related to the group
         account = group.account
-        
+
         # Calculate the total amount applied for the specified allocation_no
-        total_applied_amount = Application.objects.filter(allocation_no=allocation_no).aggregate(total=models.Sum('loan_amount'))['total'] or 0
-        
+        total_applied_amount = Application.objects.filter(allocation_no=allocation_no).aggregate(total=Sum('loan_amount'))['total'] or 0
+
         # Retrieve the allocation amount
         allocation = get_object_or_404(Allocation, allocation_no=allocation_no)
         allocation_amount = allocation.amount
-        
+
         # Calculate the remaining amount for the allocation
         remaining_allocation_amount = allocation_amount - total_applied_amount
-        
+
         loan_amount = form.cleaned_data['loan_amount']
-        
+
         # Determine proposed_amount
-        if loan_amount > remaining_allocation_amount:
-            proposed_amount = remaining_allocation_amount
-        else:
-            proposed_amount = loan_amount
-        
+        proposed_amount = min(loan_amount, remaining_allocation_amount)
+
         # Save the application
         form.instance.allocation_no = allocation_no
         form.instance.application_no = application_no
-        form.instance.application_date = datetime.now().date()
+        form.instance.application_date = timezone.now().date()
         form.instance.proposed_amount = proposed_amount
         form.instance.borrower_no = borrower_no
-        
+
         if Application.objects.filter(application_no=application_no).exists():
-            return render(self.request, self.template_name, {
+            return self.render_to_response({
                 'form': form,
                 'allocation_no': allocation_no,
-                'error_application_no': application_no,
-                'error_message': 'Application number already exists. Please try again.'
+                'error_message': f'Application number {application_no} already exists. Please try again.'
             })
 
         # Save the application instance
         application = form.save()
-        
+
         # Fetch the lender’s username
         lender_no = allocation.lender_no
         try:
             lender = Lender.objects.get(lender_no=lender_no)
         except Lender.DoesNotExist:
-            return render(self.request, self.template_name, {
+            return self.render_to_response({
                 'form': form,
                 'allocation_no': allocation_no,
                 'error_message': f'Lender with number {lender_no} does not exist.'
@@ -1431,29 +1419,37 @@ class GroupApplicationView(FormView):
         message_no = self.generate_unique_message_number()
         message = Message(
             message_no=message_no,
-            sender_username=group.borrower.username,  # Assuming borrower is a field on the Group model
-            recipient_username=lender.username,  # Lender's username
+            sender_username=borrower.username,  # Using borrower directly
+            recipient_username=lender.username,
             message_name='Group Loan Application Submitted',
             message_description=f'Application Number {application_no} for amount {form.cleaned_data["loan_amount"]} has been submitted.',
-            message_date=datetime.now().date()
+            message_date=timezone.now().date()
         )
         message.save()
-        
-        return render(self.request, self.template_name, {
+
+        return self.render_to_response({
             'form': ApplicationForm(),
             'allocation_no': allocation_no,
             'application_no': application_no,
             'success_message': f'Application successful. Application Number: {application_no}'
         })
-        
+
     def form_invalid(self, form):
         allocation_no = self.kwargs['allocation_no']
-        return render(self.request, self.template_name, {
+        return self.render_to_response({
             'form': form,
             'allocation_no': allocation_no,
-            'error_message': 'There was an error with your application. Please correct the errors.'
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
         })
-    
+
+    def generate_unique_application_number(self):
+        while True:
+            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
+            digits = ''.join(random.choices(string.digits, k=3))
+            application_no = letters + digits
+            if not Application.objects.filter(application_no=application_no).exists():
+                return application_no
+
     def generate_unique_message_number(self):
         while True:
             letters = ''.join(random.choices(string.ascii_uppercase, k=3))
@@ -1461,6 +1457,11 @@ class GroupApplicationView(FormView):
             message_no = letters + digits
             if not Message.objects.filter(message_no=message_no).exists():
                 return message_no
+
+
+
+
+
 
 
     
@@ -1503,7 +1504,7 @@ class DisbursementView(View):
             try:
                 lender = Lender.objects.get(lender_no=lender_no)
             except Lender.DoesNotExist:
-                return render(request, self.template_name, {
+                return render(self.request, self.template_name, {
                     'form': form,
                     'error_message': f'Lender with number {lender_no} does not exist.'
                 })
@@ -1551,17 +1552,17 @@ class DisbursementView(View):
             )
             message.save()
 
-            return render(request, self.template_name, {
+            return render(self.request, self.template_name, {
                 'form': DisbursementForm(),
                 'success_message': f'Disbursement successful. Disbursement Number: {disbursement.disbursement_no}'
             })
         
         else:
+            print(form.errors)  # Print form errors to console or log them for debugging
             return render(request, self.template_name, {
-                'form': form,
-                'error_message': 'There was an error with your disbursement. Please correct the errors.'
-            })
-
+            'form': form,
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
+        })
     def generate_unique_message_number(self):
         while True:
             letters = ''.join(random.choices(string.ascii_uppercase, k=3))
@@ -1605,7 +1606,7 @@ class TransactionsView(View):
             disbursements = []
             payments = []
 
-        return render(request, 'transactions.html', {'disbursements': disbursements, 'payments': payments})
+        return render(self.request, 'transactions.html', {'disbursements': disbursements, 'payments': payments})
 
     
 
@@ -1729,10 +1730,11 @@ class PaymentView(FormView):
     def form_invalid(self, form):
         transaction_no = self.kwargs['transaction_no']
         loan = get_object_or_404(Loans, transaction_no=transaction_no)
+        print(form.errors)  # Print form errors to console or log them for debugging
         return render(self.request, self.template_name, {
             'form': form,
             'transaction_no': transaction_no,
-            'error_message': 'There was an error with your payment. Please correct the errors.',
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
             'remaining_balance': loan.balance,
             'total_amount': loan.principal_interest
         })

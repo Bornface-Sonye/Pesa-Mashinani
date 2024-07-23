@@ -4,65 +4,99 @@
         <h1 class="page-title">Add Group Member</h1>
         <form method="post" action="{% url 'add_group_member' %}">
             {% csrf_token %}
+
+            <!-- Display non-field errors (form-wide errors) -->
+            {% if form.non_field_errors %}
+                <div class="error-message">
+                    <ul>
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
             
-            <!-- Member Information Section -->
+            <!-- Display form-specific error messages -->
             <div class="form-section">
-                <h2>Member Information</h2>       
+                <h2>Member Information</h2>
                 <div class="form-field">
                     <label for="{{ form.first_name.id_for_label }}" class="required">First Name:</label>
                     {{ form.first_name }}
-                    {{ form.first_name.errors }}
+                    {% if form.first_name.errors %}
+                        <div class="error-message">{{ form.first_name.errors }}</div>
+                    {% endif %}
                 </div><br>
 
                 <div class="form-field">
                     <label for="{{ form.last_name.id_for_label }}" class="required">Last Name:</label>
                     {{ form.last_name }}
-                    {{ form.last_name.errors }}
+                    {% if form.last_name.errors %}
+                        <div class="error-message">{{ form.last_name.errors }}</div>
+                    {% endif %}
                 </div><br>
                 
                 <div class="form-field">
                     <label for="{{ form.national_id.id_for_label }}" class="required">National Identification Number:</label>
                     {{ form.national_id }}
-                    {{ form.national_id.errors }}
+                    {% if form.national_id.errors %}
+                        <div class="error-message">{{ form.national_id.errors }}</div>
+                    {% endif %}
                 </div><br>
                 <div class="form-field">
                     <label for="{{ form.phone_number.id_for_label }}" class="required">Phone Number:</label>
                     {{ form.phone_number }}
-                    {{ form.phone_number.errors }}
+                    {% if form.phone_number.errors %}
+                        <div class="error-message">{{ form.phone_number.errors }}</div>
+                    {% endif %}
                 </div><br>
 
                 <div class="form-field">
                     <label for="{{ form.dob.id_for_label }}" class="required">Date of Birth:</label>
                     {{ form.dob }}
-                    {{ form.dob.errors }}
+                    {% if form.dob.errors %}
+                        <div class="error-message">{{ form.dob.errors }}</div>
+                    {% endif %}
                 </div><br>
                 <div class="form-field">
                     <label for="{{ form.gender.id_for_label }}" class="required">Gender:</label>
                     {{ form.gender }}
-                    {{ form.gender.errors }}
+                    {% if form.gender.errors %}
+                        <div class="error-message">{{ form.gender.errors }}</div>
+                    {% endif %}
                 </div><br>
                 <div class="form-field">
                     <label for="{{ form.grp_worth.id_for_label }}" class="required">Group Worth in Kshs:</label>
                     {{ form.grp_worth }}
-                    {{ form.grp_worth.errors }}
+                    {% if form.grp_worth.errors %}
+                        <div class="error-message">{{ form.grp_worth.errors }}</div>
+                    {% endif %}
                 </div><br>
                 <div class="form-field">
                     <label for="{{ form.account.id_for_label }}" class="required">Account Number:</label>
                     {{ form.account }}
-                    {{ form.account.errors }}
+                    {% if form.account.errors %}
+                        <div class="error-message">{{ form.account.errors }}</div>
+                    {% endif %}
                 </div><br>
                 <div class="form-field">
                     <label for="{{ form.approved.id_for_label }}" class="required">Member approved for Loan ?(Default, No):</label>
                     {{ form.approved }}
-                    {{ form.approved.errors }}
+                    {% if form.approved.errors %}
+                        <div class="error-message">{{ form.approved.errors }}</div>
+                    {% endif %}
                 </div><br>
             </div>
-
+            
             <div class="form-buttons">
                 <button type="submit" class="submit-button blue-button">Add Member</button>
                 <button type="button" class="red-button">Cancel</button>
                 <button type="reset" class="gray-button">Clear</button>
-            </div>  
+            </div> 
+
+            <!-- Display custom error message -->
+            {% if error_message %}
+                <div class="error-message">{{ error_message }}</div>
+            {% endif %}
         </form>
     </div>
 
@@ -89,6 +123,15 @@
     </div>
 
     <style>
+        .error-message {
+            color: red;
+            background-color: #fdd;
+            border: 1px solid red;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
         .modal {
             display: none; 
             position: fixed; 

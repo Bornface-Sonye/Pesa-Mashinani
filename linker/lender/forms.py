@@ -154,7 +154,7 @@ class UnemployedForm(forms.ModelForm):
 class GroupMemberForm(forms.ModelForm):
     class Meta:
         model = GroupMember
-        fields = ['member_no', 'first_name', 'last_name', 'national_id', 'phone_number', 'dob', 'gender', 'group', 'grp_worth', 'account', 'approved']
+        exclude = ['member_no', 'group']  # Exclude fields you handle manually
         labels = {
             'first_name': 'First Name:',
             'last_name': 'Last Name:',
@@ -177,6 +177,7 @@ class GroupMemberForm(forms.ModelForm):
             'account': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Account Number'}),
             'approved': forms.Select(attrs={'class': 'form-control'}),
         }
+
 
 
 
@@ -448,7 +449,8 @@ class LoginForm(forms.Form):
 class AllocationForm(forms.ModelForm):
     class Meta:
         model = Allocation
-        fields = ['allocation_no', 'lender_no', 'amount','interest_rate', 'allocation_date']
+        exclude = ['allocation_no', 'lender_no']
+        fields = ['allocation_no', 'lender_no', 'amount', 'interest_rate', 'allocation_date']
         labels = {
             'amount': 'Amount to Allocate',
             'interest_rate': 'Interest Rate'
@@ -474,6 +476,7 @@ class DisbursementForm(forms.ModelForm):
 class ApplicationForm(forms.ModelForm):
     class Meta:
         model = Application
+        exclude = ['borrower_no']
         fields = ['borrower_no', 'loan_amount']
         labels = {
             'loan_amount': 'Loan Amount',
@@ -501,6 +504,7 @@ class PaymentForm(forms.ModelForm):
 class DefaulterForm(forms.ModelForm):
     class Meta:
         model = Defaulter
+        exclude = ['lender_no']  # Exclude fields you handle manually
         fields = ['national_id', 'lender_no', 'amount_owed']
         widgets = {
             'submission_date': forms.HiddenInput(),
