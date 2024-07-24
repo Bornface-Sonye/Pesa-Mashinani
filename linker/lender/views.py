@@ -549,7 +549,7 @@ class BankSignUpView(View):
                     error_message += " The username does not exist. Please register as a lender first."
 
                 form.add_error(None, error_message)
-                return render(request, self.template_name, {'form': form})
+                return render(request, self.template_name, {'form': form}, error_message)
 
             # Check if username already exists in System_User model
             if System_User.objects.filter(username=username).exists():
@@ -1013,7 +1013,7 @@ class AllocationView(View):
             message_no = self.generate_unique_message_number()
             message = Message(
                 message_no=message_no,
-                sender_usename=lender.username,  # Assuming lender.username is the sender
+                sender_username=lender.username,  # Assuming lender.username is the sender
                 recipient_username=lender.username,  # Assuming the recipient is also the lender
                 message_name='Allocation Notice',  # You can customize this
                 message_description=f'Allocation Number {allocation_no} of amount {amount} has been successfully processed.',
@@ -1074,7 +1074,7 @@ class GroupAllocationView(View):
         form = AllocationForm(request.POST)
 
         if form.is_valid():
-            allocation_no = self.generate_unique_allocation_number()
+            allocation_no = unique_allocation_number()
             amount = form.cleaned_data['amount']
             allocation_date = datetime.now()
 
@@ -1388,13 +1388,6 @@ class GroupApplicationView(FormView):
         form.instance.proposed_amount = proposed_amount
         form.instance.borrower_no = borrower_no
 
-        if Application.objects.filter(application_no=application_no).exists():
-            return self.render_to_response({
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Application number {application_no} already exists. Please try again.'
-            })
-
         # Save the application instance
         application = form.save()
 
@@ -1476,40 +1469,70 @@ class RequestsView(ListView):
             # For example, return an empty queryset or handle the case appropriately
             return Application.objects.none()  # No applications listed if lender_no is not in session
  
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views import View
+from django.utils import timezone
+import random
+import string
+from .models import Application, Lender, Borrower, GroupMember, Account, Message
+from .forms import DisbursementForm
+
 class DisbursementView(View):
+    form_class = DisbursementForm
     template_name = 'disbursement.html'
 
     def get(self, request, *args, **kwargs):
-        form = DisbursementForm()
-        return render(request, self.template_name, {'form': form})
+        application_no = self.kwargs.get('application_no')
+        lender_no = self.request.session.get('lender_no', None)
+        
+        form = self.form_class(initial={
+            'application_no': application_no,
+            'transaction_no': self.unique_transaction_number(),  # Ensure function is defined
+            'disbursement_date': timezone.now().date(),
+            'lender_no': lender_no
+        })
+        
+        context = {
+            'form': form,
+            'application_no': application_no,
+            'lender_no': lender_no
+        }
+        
+        return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        form = DisbursementForm(request.POST)
+        # Extract application_no from URL parameters
+        application_no = self.kwargs.get('application_no')
+        lender_no = self.request.session.get('lender_no', None)
         
+        form = self.form_class(request.POST)
         if form.is_valid():
-            application_no = form.cleaned_data['application_no']
-            disbursement_amount = form.cleaned_data['disbursement_amount']
-            disbursement_date = datetime.now().date()
-
+            # Extract disbursed amount from the form's cleaned data
+            disbursed_amount = form.cleaned_data['disbursed_amount']
+            
+            # Generate a transaction number if needed
+            transaction_no = self.unique_transaction_number()  # Ensure function is defined
+            
             # Check if the application number exists
             try:
                 application = Application.objects.get(application_no=application_no)
             except Application.DoesNotExist:
                 return render(request, self.template_name, {
                     'form': form,
+                    'application_no': application_no,
                     'error_message': f'Application number {application_no} does not exist.'
                 })
 
             # Retrieve lender from session
-            lender_no = request.session.get('lender_no')
             if not lender_no:
                 return redirect('login')  # or another appropriate redirect
 
             try:
                 lender = Lender.objects.get(lender_no=lender_no)
             except Lender.DoesNotExist:
-                return render(self.request, self.template_name, {
+                return render(request, self.template_name, {
                     'form': form,
+                    'application_no': application_no,
                     'error_message': f'Lender with number {lender_no} does not exist.'
                 })
 
@@ -1520,53 +1543,89 @@ class DisbursementView(View):
             except Borrower.DoesNotExist:
                 return render(request, self.template_name, {
                     'form': form,
+                    'application_no': application_no,
                     'error_message': f'Borrower with number {borrower_no} does not exist.'
                 })
 
-            # Retrieve the lender's account and update the balance
-            lender_account = lender.account_no
-            if lender_account.account_bal < disbursement_amount:
+            # Retrieve the borrower's national ID
+            national_id = borrower.national_id
+            
+            # Retrieve the group member using the national ID
+            try:
+                group_member = GroupMember.objects.get(national_id=national_id)
+            except GroupMember.DoesNotExist:
                 return render(request, self.template_name, {
                     'form': form,
+                    'application_no': application_no,
+                    'error_message': f'Group member with national ID {national_id} does not exist.'
+                })
+
+            # Retrieve the account using the group member's account number
+            try:
+                borrower_account = Account.objects.get(account_no=group_member.account)
+            except Account.DoesNotExist:
+                return render(request, self.template_name, {
+                    'form': form,
+                    'application_no': application_no,
+                    'error_message': f'Account with number {group_member.account} does not exist.'
+                })
+
+            # Retrieve the lender's account
+            try:
+                lender_account = Account.objects.get(account_no=lender.account_no)
+            except Account.DoesNotExist:
+                return render(request, self.template_name, {
+                    'form': form,
+                    'application_no': application_no,
+                    'error_message': f'Lender account with number {lender.account_no} does not exist.'
+                })
+
+            # Check if the lender's account has sufficient balance
+            if lender_account.account_bal < disbursed_amount:
+                return render(request, self.template_name, {
+                    'form': form,
+                    'application_no': application_no,
                     'error_message': f'Insufficient account balance. Current balance is {lender_account.account_bal}.'
                 })
 
-            lender_account.account_bal -= disbursement_amount
+            # Update lender's account balance
+            lender_account.account_bal -= disbursed_amount
             lender_account.save()
 
-            # Retrieve the borrower's account and update the balance
-            borrower_account = borrower.account_no
-            borrower_account.account_bal += disbursement_amount
+            # Update borrower's account balance
+            borrower_account.account_bal += disbursed_amount
             borrower_account.save()
 
             # Create and save the disbursement record
             disbursement = form.save(commit=False)
-            disbursement.disbursement_date = disbursement_date
+            disbursement.disbursement_date = timezone.now().date()
             disbursement.save()
 
             # Create and save the message
             message_no = self.generate_unique_message_number()
             message = Message(
                 message_no=message_no,
-                sender_username=lender.username,  # Lender's username
-                recipient_username=borrower.username,  # Borrower's username
+                sender_username=lender.username,  # Ensure Lender has username field
+                recipient_username=borrower.username,  # Ensure Borrower has username field
                 message_name='Disbursement Completed',
-                message_description=f'Disbursement of amount {disbursement_amount} has been processed for Application Number {application_no}.',
-                message_date=disbursement_date
+                message_description=f'Disbursement of amount {disbursed_amount} has been processed for Application Number {application_no}.',
+                message_date=timezone.now().date()
             )
             message.save()
 
-            return render(self.request, self.template_name, {
-                'form': DisbursementForm(),
-                'success_message': f'Disbursement successful. Disbursement Number: {disbursement.disbursement_no}'
+            return render(request, self.template_name, {
+                'form': DisbursementForm(),  # Reset the form after success
+                'application_no': application_no,
+                'success_message': f'Disbursement successful. Disbursement Number: {disbursement.transaction_no}'
             })
         
         else:
-            print(form.errors)  # Print form errors to console or log them for debugging
             return render(request, self.template_name, {
-            'form': form,
-            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
-        })
+                'form': form,
+                'application_no': application_no,
+                'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
+            })
+        
     def generate_unique_message_number(self):
         while True:
             letters = ''.join(random.choices(string.ascii_uppercase, k=3))
@@ -1574,6 +1633,18 @@ class DisbursementView(View):
             message_no = letters + digits
             if not Message.objects.filter(message_no=message_no).exists():
                 return message_no
+
+    def unique_transaction_number(self):
+        # Implement a method to generate a unique transaction number
+        while True:
+            number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+            if not Disbursement.objects.filter(transaction_no=number).exists():
+                return number
+
+
+
+
+
 
 class TransactionsView(View):
     def get(self, request):
