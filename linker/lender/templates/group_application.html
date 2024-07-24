@@ -3,7 +3,7 @@
 {% block content %}
 <div class="form-container">
     <h1 class="page-title">Loan Application Form</h1>
-    <form method="post" action="{% url 'application' allocation_no=allocation_no %}">
+    <form method="post" action="{% url 'grp_application' allocation_no=allocation_no %}">
         {% csrf_token %}
         <!-- Display non-field errors (form-wide errors) -->
         {% if form.non_field_errors %}

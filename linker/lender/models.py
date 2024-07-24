@@ -383,9 +383,9 @@ class Payment(models.Model):
     
     
 class Loan(models.Model):
-    payment_id = models.AutoField(primary_key=True, unique=True)
-    payment_no = models.CharField(unique=True, max_length=30, help_text="Enter the Payment Number", blank=True)
+    loan_id = models.AutoField(primary_key=True, unique=True)
     transaction_no = models.CharField(max_length=30, help_text="Enter the Transaction Number")
+    payment_no = models.CharField(unique=True, max_length=30, help_text="Enter the Payment Number", blank=True)
     principal = models.DecimalField(max_digits=15, decimal_places=2, help_text="Enter Amount to Pay")
     principal_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Amount")
     amount_paid =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Paid")

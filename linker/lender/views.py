@@ -28,6 +28,22 @@ from django import forms
 from django.db import models
 from django.db.models import Sum
 
+from django.shortcuts import redirect, render
+from django.views import View
+from .models import GroupMember, System_User, Borrower, Group, Defaulter
+from .forms import GroupMemberForm
+from .utils import generate_unique_member_number  # Ensure this utility function is defined
+
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse_lazy
+from django.views.generic.edit import FormView
+from django.utils import timezone
+from django.db.models import Sum
+import random
+import string
+
+from .models import Application, Allocation, Borrower, Group, Lender, Message
+from .forms import ApplicationForm
 
 
 from django.shortcuts import render, get_object_or_404
@@ -676,11 +692,7 @@ class Group_Dashboard_View(View):
         return render(request, 'group.html', {'user': user, 'borrower_no': borrower_no, 'lender_no': lender_no, 'group': group})
 
 
-from django.shortcuts import redirect, render
-from django.views import View
-from .models import GroupMember, System_User, Borrower, Group, Defaulter
-from .forms import GroupMemberForm
-from .utils import generate_unique_member_number  # Ensure this utility function is defined
+
 
 class AddGroupMemberView(View):
     def get(self, request):
@@ -1118,10 +1130,34 @@ class AllocationsView(ListView):
 class GroupAllocationsView(ListView):
     model = Allocation
     template_name = 'grp_allocations_list.html'
-    context_object_name = 'allocations'        
+    context_object_name = 'allocations'
+
+    def get_queryset(self):
+        # Get the lender_no from the session
+        lender_no_session = self.request.session.get('lender_no')
+
+        # Check if lender_no is present in the session
+        if lender_no_session:
+            # Filter allocations where lender_no does not match the lender_no in the session
+            return Allocation.objects.exclude(lender_no=lender_no_session)
+        else:
+            # If lender_no is not in the session, handle according to your application needs
+            # For example, return an empty queryset or handle the case appropriately
+            return Allocation.objects.none()  # No allocations listed if lender_no is not in session
+        
 
 
 
+
+from django.views.generic.edit import FormView
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse_lazy
+from django.utils import timezone
+from .models import Borrower, Application, GroupMember, Group, Account, Allocation, Lender, GroupLender, Message
+from .forms import ApplicationForm
+import random
+import string
+from django.db import models
 
 class ApplicationView(FormView):
     form_class = ApplicationForm
@@ -1136,8 +1172,8 @@ class ApplicationView(FormView):
         
         kwargs['initial'] = {
             'allocation_no': allocation_no,
-            'application_no': unique_application_number(),
-            'application_date': datetime.now().date(),
+            'application_no': self.generate_unique_application_number(),
+            'application_date': timezone.now().date(),
             'borrower_no': borrower_no  # Add borrower_no to initial data
         }
         return kwargs
@@ -1160,50 +1196,29 @@ class ApplicationView(FormView):
         borrower_no = self.request.session.get('borrower_no', None)
         
         # Fetch Borrower object using borrower_no
-        try:
-            borrower = Borrower.objects.get(borrower_no=borrower_no)
-        except Borrower.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Borrower with number {borrower_no} does not exist.'
-            })
+        borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
         
         # Fetch GroupMember related to the borrower's national_id
-        try:
-            group_member = GroupMember.objects.get(national_id=borrower.national_id)
-        except GroupMember.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Group member with national ID {borrower.national_id} does not exist.'
-            })
+        group_member = get_object_or_404(GroupMember, national_id=borrower.national_id)
         
-        group_no = group_member.group
-        member_count = GroupMember.objects.filter(group=group_no).count()
+        group_no = group_member.group.group_no if hasattr(group_member.group, 'group_no') else group_member.group  # Ensure this is fetching the correct attribute
+        member_count = GroupMember.objects.filter(group=group_member.group).count()
+
+        
+
 
         # Fetch Group object related to group_no
-        try:
-            group = Group.objects.get(group_no=group_no)
-        except Group.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Group with number {group_no} does not exist.'
-            })
+        group = get_object_or_404(Group, group_no=group_no)
 
         # Fetch Account object related to group's account
-        try:
-            account = Account.objects.get(account_no=group.account.account_no)
-        except Account.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Account with number {group.account.account_no} does not exist.'
-            })
-        
+        account = get_object_or_404(Account, account_no=group.account.account_no)
+        group_lender = get_object_or_404(GroupLender, group_no=group)
+        lender_no = group_lender.lender_no.lender_no
+        total_allocations = Allocation.objects.filter(lender_no=lender_no).count()
         grp_worth = account.account_bal
-        
+        account_n = group_member.account
+        member_acc = get_object_or_404(Account, account_no=account_n)
+        member_bal = member_acc.account_bal
         # Additional logic you have in your form_valid method
         age = group_member.calculate_age()
         gender = group_member.gender
@@ -1214,49 +1229,20 @@ class ApplicationView(FormView):
             return render(self.request, self.template_name, {
                 'form': form,
                 'allocation_no': allocation_no,
-                'error_message': f'This group member is not approved for a loan.'
+                'error_message': 'This group member is not approved for a loan.'
             })
         
         # Assign account balance to member_balance
         member_balance = account.account_bal
         
         # Fetch GroupLender object based on group_no
-        try:
-            group_lender = GroupLender.objects.get(group_no=group_member.group)
-        except GroupLender.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Group lender for group {group_member.group} does not exist.'
-            })
+        #group_lender = get_object_or_404(GroupLender, group_no=group_member.group.group_no)
         
         # Fetch Allocation object
-        try:
-            allocation = Allocation.objects.get(allocation_no=allocation_no)
-        except Allocation.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Allocation with number {allocation_no} does not exist.'
-            })
+        allocation = get_object_or_404(Allocation, allocation_no=allocation_no)
         
         # Fetch Lender object based on lender_no from Allocation
-        try:
-            lender = Lender.objects.get(lender_no=allocation.lender_no)
-        except Lender.DoesNotExist:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': f'Lender with number {allocation.lender_no} does not exist.'
-            })
-        
-        # Check if the application number already exists
-        if Application.objects.filter(application_no=application_no).exists():
-            return render(self.request, self.template_name, {
-                'form': form,
-                'allocation_no': allocation_no,
-                'error_message': 'Application number already exists. Please try again.'
-            })
+        lender = get_object_or_404(Lender, lender_no=allocation.lender_no)
 
         # Calculate the total applied amount for the allocation_no
         total_applied_amount = Application.objects.filter(allocation_no=allocation_no).aggregate(total=models.Sum('loan_amount'))['total'] or 0
@@ -1270,25 +1256,35 @@ class ApplicationView(FormView):
                 'allocation_no': allocation_no,
                 'error_message': f'The loan amount exceeds the remaining allocation amount of {remaining_amount}.'
             })
-
-        form.instance.allocation_no = allocation_no
-        form.instance.application_no = application_no
-        form.instance.application_date = datetime.now().date()
-        form.instance.proposed_amount = result
-        form.instance.borrower_no = borrower_no
+            
+        # Test MachineLearningModel class
+        ml_model = MachineLearningModel()
+        mse, r2 = ml_model.accuracy()
+        loan_proposal = LoanProposal()
+        #loan_proposal.data_retrieval('Mary', age, 'Male', member_bal, member_count, 300000, 3500, 7, loan_amount)
+        loan_proposal.data_retrieval('Mary', age, gender, member_bal, member_count, grp_worth, membgrp_worth, total_allocations, loan_amount)
+        prediction_result = loan_proposal.data_preparation()
+        result = float(f"{float(prediction_result):.2f}")
+        # Assign form data to the application instance
+        application = form.save(commit=False)
+        application.allocation_no = allocation_no
+        application.application_no = application_no
+        application.application_date = timezone.now().date()
+        application.proposed_amount = result  # Assign the loan amount
+        application.borrower_no = borrower  # Correctly assign the borrower object
         
         # Save the form instance
-        application = form.save()
+        application.save()
         
         # Create and save the message
         message_no = self.generate_unique_message_number()
         message = Message(
             message_no=message_no,
-            sender_usename=borrower.username,  # Borrower's username
+            sender_username=borrower.username,  # Borrower's username
             recipient_username=lender.username,  # Lender's username
             message_name='Loan Application Submitted',
-            message_description=f'Application Number {application_no} for amount {loan_amount} has been submitted.',
-            message_date=datetime.now().date()
+            message_description=f'Application Number {application_no} for grp_worth{grp_worth} amount membgrp_worth {membgrp_worth} has allocation count{total_allocations}been gender {gender}submitted.',
+            message_date=timezone.now().date()
         )
         message.save()
         
@@ -1302,11 +1298,19 @@ class ApplicationView(FormView):
     def form_invalid(self, form):
         allocation_no = self.kwargs['allocation_no']
         print(form.errors)  # Print form errors to console or log them for debugging
-        return render(request, self.template_name, {
+        return render(self.request, self.template_name, {
             'form': form,
             'allocation_no': allocation_no,
-            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
+            'error_message': f'Form Invalid. Errors: {form.errors}',
         })
+
+    def generate_unique_application_number(self):
+        while True:
+            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
+            digits = ''.join(random.choices(string.digits, k=3))
+            application_no = letters + digits
+            if not Application.objects.filter(application_no=application_no).exists():
+                return application_no
 
     def generate_unique_message_number(self):
         while True:
@@ -1321,20 +1325,10 @@ class ApplicationView(FormView):
 
         
 
-from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
-from django.utils import timezone
-from django.db.models import Sum
-import random
-import string
-
-from .models import Application, Allocation, Borrower, Group, Lender, Message
-from .forms import ApplicationForm
 
 class GroupApplicationView(FormView):
     form_class = ApplicationForm
-    template_name = 'application.html'
+    template_name = 'group_application.html'
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -1459,19 +1453,29 @@ class GroupApplicationView(FormView):
                 return message_no
 
 
-
-
-
-
-
-    
 class RequestsView(ListView):
     model = Application
     template_name = 'application_list.html'
-    context_object_name = 'applications' 
- 
- 
+    context_object_name = 'applications'
 
+    def get_queryset(self):
+        # Get the lender_no from the session
+        lender_no_session = self.request.session.get('lender_no')
+
+        if lender_no_session:
+            # Get allocations related to the lender_no
+            allocations = Allocation.objects.filter(lender_no=lender_no_session)
+            
+            # Extract allocation numbers
+            allocation_numbers = allocations.values_list('allocation_no', flat=True)
+            
+            # Get applications related to these allocations
+            return Application.objects.filter(allocation_no__in=allocation_numbers)
+        else:
+            # If lender_no is not in the session, handle according to your application needs
+            # For example, return an empty queryset or handle the case appropriately
+            return Application.objects.none()  # No applications listed if lender_no is not in session
+ 
 class DisbursementView(View):
     template_name = 'disbursement.html'
 

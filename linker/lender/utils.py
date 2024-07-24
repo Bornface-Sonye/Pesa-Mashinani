@@ -158,6 +158,15 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 import joblib
 
+import os
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import joblib
+from django.conf import settings
+
 class MachineLearningModel:
     def __init__(self):
         self.new_data = None
@@ -167,47 +176,48 @@ class MachineLearningModel:
         self.model = None
         self.scaler = None
         self.actual_labels = None
-        
+
         # Assuming the CSV file is named 'pesa.csv' and located in the same directory as this script
-        self.file_path = 'pesa.csv'  # Adjust as per your actual path
+        self.file_path = os.path.join(settings.BASE_DIR, 'lender', 'pesa', 'pesa.csv')
+        # self.file_path = 'pesa.csv'  # Adjust as per your actual path
         self.df = pd.read_csv(self.file_path)
-        
+
         # Update feature names based on the new CSV structure
         self.feature_names = ['Age', 'Gender', 'Worth', 'GrpPopulation', 'GrpWorth', 'MembGrpWorth', 'GrpTransactions', 'RequestedAmt']
         self.training_features = self.df[self.feature_names].copy()  # Ensure to copy to avoid SettingWithCopyWarning
-        
+
         # Outcome label is now ProposedAmt
         self.outcome_name = 'ProposedAmt'
         self.outcome_labels = self.df[self.outcome_name]
-        
+
         # Define numeric and categorical feature names
         self.numeric_feature_names = ['Age', 'Worth', 'GrpPopulation', 'GrpWorth', 'MembGrpWorth', 'GrpTransactions', 'RequestedAmt']
         self.categorical_feature_names = ['Gender']
-        
+
         # Standardize numeric features
         ss = StandardScaler()
         self.training_features.loc[:, self.numeric_feature_names] = ss.fit_transform(self.training_features.loc[:, self.numeric_feature_names])
-        
+
         # Convert categorical features into dummy variables
         self.training_features = pd.get_dummies(self.training_features, columns=self.categorical_feature_names)
-        
+
         # Store the scaler for later use
         self.scaler = ss
-        
+
         # Train a linear regression model
         self.lr = LinearRegression()
         self.model = self.lr.fit(self.training_features, self.outcome_labels)
-        
+
         # Store the model using joblib
         if not os.path.exists('Model'):
             os.mkdir('Model')
         joblib.dump(self.model, 'Model/model.pickle')
         joblib.dump(self.scaler, 'Model/scaler.pickle')
-        
+
         # Predict on training data
         self.pred_labels = self.model.predict(self.training_features)
         self.actual_labels = self.outcome_labels
-    
+
     def accuracy(self):
         mse = mean_squared_error(self.actual_labels, self.pred_labels)
         r2 = r2_score(self.actual_labels, self.pred_labels)
@@ -221,26 +231,26 @@ class LoanProposal:
         self.training_features = None
         self.model = joblib.load('Model/model.pickle')
         self.scaler = joblib.load('Model/scaler.pickle')
-        
+
         # Load the CSV file for data retrieval        
-        self.file_path = 'pesa.csv'  # Adjust as per your actual path
+        self.file_path = os.path.join(settings.BASE_DIR, 'lender', 'pesa', 'pesa.csv')  # Adjust as per your actual path
         self.df = pd.read_csv(self.file_path)
-        
+
         # Update feature names based on the new CSV structure
         self.feature_names = ['Name', 'Age', 'Gender', 'Worth', 'GrpPopulation', 'GrpWorth', 'MembGrpWorth', 'GrpTransactions', 'RequestedAmt']
         self.training_features = self.df[self.feature_names[1:]].copy()  # Ensure to copy to avoid SettingWithCopyWarning, excluding 'Name'
         self.outcome_name = 'ProposedAmt'
-        
+
         # Numeric and categorical feature names
         self.numeric_feature_names = ['Age', 'Worth', 'GrpPopulation', 'GrpWorth', 'MembGrpWorth', 'GrpTransactions', 'RequestedAmt']
         self.categorical_feature_names = ['Gender']
-        
+
         # Fit the scaler on the numeric features
         self.training_features.loc[:, self.numeric_feature_names] = self.scaler.transform(self.training_features.loc[:, self.numeric_feature_names])
-        
+
         # Convert categorical features into dummy variables
         self.training_features = pd.get_dummies(self.training_features, columns=self.categorical_feature_names)
-    
+
     def data_retrieval(self, name, age, gender, worth, grp_population, grp_worth, memb_grp_worth, grp_transactions, requested_amt):
         # Prepare new data for prediction
         self.new_data = pd.DataFrame({
@@ -254,36 +264,41 @@ class LoanProposal:
             'GrpTransactions': [grp_transactions],
             'RequestedAmt': [requested_amt]
         })
-        
+
     def data_preparation(self):
         # Transform and prepare new data for prediction
         self.prediction = self.new_data.copy()
-        
+
         # Scale numeric features
         self.prediction.loc[:, self.numeric_feature_names] = self.scaler.transform(self.prediction.loc[:, self.numeric_feature_names])
-        
+
         # Convert categorical features into dummy variables
         self.prediction = pd.get_dummies(self.prediction, columns=['Gender'])
-        
+
         # Ensure all categorical features are aligned
         for feature in ['Gender_Male', 'Gender_Female']:  # Adjust as per your column names
             if feature not in self.prediction.columns:
                 self.prediction[feature] = 0  # Add missing categorical feature columns with 0
-        
+
         # Ensure the prediction data columns match the training data columns
         self.prediction = self.prediction[self.training_features.columns]
-        
+
         # Make predictions using the loaded model
         self.predictions = self.model.predict(self.prediction)
-        
+
+        # Convert predictions to float to avoid Decimal issues
+        self.predictions = np.array(self.predictions, dtype=float)
+
         # Clip predicted values to ensure they are within the desired range
-        self.predictions = np.clip(self.predictions, 0, self.new_data['RequestedAmt'])
-        
+        requested_amt = float(self.new_data['RequestedAmt'].iloc[0])
+        self.predictions = np.clip(self.predictions, 0, requested_amt)
+
         # Round to the nearest 0.100
         self.predictions = np.round(self.predictions * 1) / 1
-        
+
         # Return only the predicted ProposedAmt value formatted to two decimal places
-        return self.predictions[0]
+        return float(f"{self.predictions[0]:.2f}")
+
 
 def generate_number():
     """Generate a random 10-character alphanumeric allocation number."""
