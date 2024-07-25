@@ -3,11 +3,12 @@ from .views import (
     UserCreateView, BorrowerCreateView, EntrepreneurCreateView, CivilServantCreateView, EmployeeCreateView, UnemployedCreateView,
     GroupCreateView, LenderCreateView, BankCreateView, GroupLenderCreateView, HomePage_View, 
     Borrower_Dashboard_View, Group_Dashboard_View, Bank_Dashboard_View, grouplogout, banklogout, borrowerlogout,  BorrowerGroupCreateView, SuccessView, 
-    AllocationView, RequestsView, TransactionsView, ApplicationView, DisbursementView, PaymentView, Group_Dashboard_View, 
+    AllocationView, RequestsView,  ApplicationView, DisbursementView,  Group_Dashboard_View, 
     AllocationsView, MemberListView, BankLoginView, GroupLoginView, BorrowerLoginView, BankSignUpView,
     BorrowerSignUpView, GroupSignUpView, AddGroupMemberView, MemberUpdateView, MemberDeleteView, AddGroupMemberView, 
     GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, 
-    DefaulterDeleteView, GroupDisbursementView, GroupPaymentView
+    DefaulterDeleteView, GroupDisbursementView, LoanPaymentView, GroupLoansView, BankLoansView, 
+    BorrowerLoansView, GroupLoanPaymentView
 )
 
 urlpatterns = [
@@ -46,15 +47,17 @@ urlpatterns = [
     path('group_disbursement/<str:application_no>/', GroupDisbursementView.as_view(), name='group_disbursement'),
     path('application/<str:allocation_no>/', ApplicationView.as_view(), name='application'),
     path('grp_application/<str:allocation_no>/', GroupApplicationView.as_view(), name='grp_application'),
-    path('transactions/', TransactionsView.as_view(), name='transactions_list'),
     path('allocations/', AllocationsView.as_view(), name='allocations_list'),
     path('grp_allocations/', GroupAllocationsView.as_view(), name='grp_allocations_list'),
     path('requests/', RequestsView.as_view(), name='requests_list'),
-    path('payment/<str:transaction_no>/', PaymentView.as_view(), name='payment'),
-    path('group_payment/<str:transaction_no>/', GroupPaymentView.as_view(), name='group_payment'),
+    path('group_payment/<str:transaction_no>/', GroupLoanPaymentView.as_view(), name='group_payment'),
     path('members/', MemberListView.as_view(), name='member_list'),
-    #path('group_dashboard/', Group_Dashboard_View.as_view(), name='group_dashboard'),
+    path('payment/<str:transaction_no>/', LoanPaymentView.as_view(), name='payment'),
+    path('group_payment/<str:transaction_no>/', GroupLoanPaymentView.as_view(), name='group_payment'),
     path('members/update/<int:pk>/', MemberUpdateView.as_view(), name='update_member'),
     path('members/delete/<int:pk>/', MemberDeleteView.as_view(), name='delete_member'),
     path('add_member/', AddGroupMemberView.as_view(), name='add_group_member'),
+    path('loans/', GroupLoansView.as_view(), name='loans'),
+    path('bank_loans/', BankLoansView.as_view(), name='bank_loans'),
+    path('borrower_loans/', BorrowerLoansView.as_view(), name='borrower_loans'),
 ]

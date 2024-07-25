@@ -367,6 +367,7 @@ class Disbursement(models.Model):
     borrower_no = models.CharField(max_length=100, help_text="Enter Borrower Number:")
     disbursed_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text="Enter Amount to Disburse")
     disbursement_date = models.DateField(help_text="Enter Date of Disbursement")
+    loan_duration_months = models.IntegerField(help_text="Loan Duration in Months")
 
     def __str__(self):
         return f"Disbursement - {self.transaction_no}"
@@ -394,7 +395,10 @@ class Loan(models.Model):
     principal_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Amount")
     amount_paid =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Paid")
     balance =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Balance")
-    loan_date = models.DateField(help_text="Enter Date of Disbursement")
+    loan_date = models.DateField(
+    help_text="Enter Date of last Payment",
+    default='2024-01-01'  # Ensure this is a string
+)
 
     def __str__(self):
         return f"Loan - {self.transaction_no}"

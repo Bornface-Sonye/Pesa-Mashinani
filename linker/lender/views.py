@@ -27,6 +27,8 @@ from .models import Application
 from django import forms
 from django.db import models
 from django.db.models import Sum
+from decimal import Decimal
+
 
 from django.views.generic.edit import FormView
 from django.shortcuts import get_object_or_404, render
@@ -148,7 +150,7 @@ from .models import (
 from .forms import BorrowerForm, EntrepreneurForm, CivilServantForm, EmployeeForm, UnemployedForm, GroupForm
 from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementForm, GroupMemberForm
 from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm
-from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm, DefaulterForm,  DefaulterUpdateForm
+from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm, DefaulterForm,  DefaulterUpdateForm, PaymentForm
    
 
 def grouplogout(request):
@@ -1289,8 +1291,8 @@ class ApplicationView(FormView):
         if Loan.objects.filter(borrower_no=borrower_no).exists():
             return render(self.request, self.template_name, {
                 'form': form,
-                'application_no': application_no,
-                'error_transaction_no': transaction_no,
+                'allocation_no': allocation_no,
+                'error_application_no': application_no,
                 'error_message': 'You already have unsettled loan, Please settle you Loan First !'
             })
         # Save the form instance
@@ -1410,8 +1412,8 @@ class GroupApplicationView(FormView):
         if Loan.objects.filter(borrower_no=borrower_no).exists():
             return render(self.request, self.template_name, {
                 'form': form,
-                'application_no': application_no,
-                'error_transaction_no': transaction_no,
+                'allocation_no': allocation_no,
+                'error_application_no': application_no,
                 'error_message': 'You already have unsettled loan, Please settle you Loan First !'
             })
         # Save the application instance
@@ -1521,17 +1523,18 @@ class DisbursementView(FormView):
     def form_valid(self, form):
         application_no = self.kwargs['application_no']
         transaction_no = unique_transaction_number()
-        
+
         application = get_object_or_404(Application, application_no=application_no)
         allocation = get_object_or_404(Allocation, allocation_no=application.allocation_no)
         lender_no = allocation.lender_no
         borrower_no = application.borrower_no
         lender = Lender.objects.get(lender_no=lender_no)
-        #borrower = Borrower.objects.get(borrower_no=borrower_no)
+
         borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
+
         # Get the proposed amount from the Application table
         proposed_amount = application.proposed_amount
-        
+
         # Check if the entered amount is valid
         entered_amount = form.cleaned_data.get('disbursed_amount')
         if entered_amount > proposed_amount:
@@ -1541,23 +1544,28 @@ class DisbursementView(FormView):
                 'transaction_no': transaction_no,
                 'error_message': 'Entered amount cannot be greater than proposed amount.'
             })
-            
-        borrower_id = borrower.national_id
-        member_account =get_object_or_404(GroupMember, national_id=borrower_id)
-        #group = get_object_or_404(Group, borrower_no=borrower)
 
-        borrower_account = Account.objects.get(account_no=member_account.account)
-        #lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
-        
-        #lender_account = Account.objects.get(account_no=lender.account_no)
+        # Determine the borrower's account based on the borrower type
+        if borrower.borrower_type == 'group':
+            # For group borrowers, fetch the Group and corresponding Account
+            group = get_object_or_404(Group, borrower_no=borrower)
+            borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
+        else:
+            # For individual borrowers, use the national ID to find the GroupMember and their Account
+            borrower_id = borrower.national_id
+            member_account = get_object_or_404(GroupMember, national_id=borrower_id)
+            borrower_account = Account.objects.get(account_no=member_account.account)
+
+        # Fetch the lender's account
         lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
+
         # Check if the lender's account has sufficient balance
         if lender_account.account_bal < entered_amount:
-                return render(request, self.template_name, {
-                    'form': form,
-                    'application_no': application_no,
-                    'error_message': f'Insufficient account balance. Current balance is {lender_account.account_bal}.'
-                })
+            return render(self.request, self.template_name, {
+                'form': form,
+                'application_no': application_no,
+                'error_message': f'Insufficient account balance. Current balance is {lender_account.account_bal}.'
+            })
 
         # Update lender's account balance
         lender_account.account_bal -= entered_amount
@@ -1566,17 +1574,18 @@ class DisbursementView(FormView):
         # Update borrower's account balance
         borrower_account.account_bal += entered_amount
         borrower_account.save()
-        
+
         disbursed_amount = entered_amount
         # Save the disbursement if everything is valid
         form.instance.disbursed_amount = disbursed_amount
         form.instance.application_no = application_no
         form.instance.transaction_no = transaction_no
         form.instance.borrower_no = borrower_no
+        form.instance.loan_duration_months = 12
         form.instance.disbursement_date = datetime.now().date()
 
         form.save()
-        
+
         # Create and save the message
         message_no = self.generate_unique_message_number()
         message = Message(
@@ -1588,7 +1597,7 @@ class DisbursementView(FormView):
             message_date=timezone.now().date()
         )
         message.save()
-        
+
         # Create and save the payment
         payment_no = unique_payment_number()
         payment = Payment(
@@ -1598,20 +1607,19 @@ class DisbursementView(FormView):
             payment_date=timezone.now().date()
         )
         payment.save()
-        
-        
+
         # Create and save the loan
         payment_no = unique_payment_number()
         loan = Loan(
             transaction_no=transaction_no,
             payment_no=payment_no,
-            borrower_no = borrower_no,
-            lender_no = lender_no
-            principal = disbursed_amount
-            loan_interest = allocation.interest_rate
-            principal_interest = disbursed_amount
-            amount_paid = 0,
-            balance = disbursed_amount,
+            borrower_no=borrower_no,
+            lender_no=lender_no,
+            principal=disbursed_amount,
+            loan_interest=allocation.interest_rate,
+            principal_interest=disbursed_amount,
+            amount_paid=0,
+            balance=disbursed_amount,
             loan_date=timezone.now().date()
         )
         loan.save()
@@ -1630,7 +1638,6 @@ class DisbursementView(FormView):
             'transaction_no': form.cleaned_data.get('transaction_no', None),
             'error_message': 'There was an error with your disbursement. Please correct the errors.'
         })
-
 
     def generate_unique_message_number(self):
         while True:
@@ -1685,11 +1692,18 @@ class GroupDisbursementView(FormView):
         entered_amount = form.cleaned_data.get('disbursed_amount')
         if entered_amount > proposed_amount:
             return self.render_error(form, application_no, transaction_no, 'Entered amount cannot be greater than proposed amount.')
-
-        # Get the group and its associated account
-        group = get_object_or_404(Group, borrower_no=borrower)
-        borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
-
+        
+        
+        # Determine the borrower's account based on the borrower type
+        if borrower.borrower_type == 'group':
+            # For group borrowers, fetch the Group and corresponding Account
+            group = get_object_or_404(Group, borrower_no=borrower)
+            borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
+        else:
+            # For individual borrowers, use the national ID to find the GroupMember and their Account
+            borrower_id = borrower.national_id
+            member_account = get_object_or_404(GroupMember, national_id=borrower_id)
+            borrower_account = Account.objects.get(account_no=member_account.account)
         # Get lender's account using the lender's account number
         lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
 
@@ -1711,6 +1725,7 @@ class GroupDisbursementView(FormView):
         form.instance.application_no = application_no
         form.instance.transaction_no = transaction_no
         form.instance.borrower_no = borrower_no
+        form.instance.loan_duration_months = 12
         form.instance.disbursement_date = timezone.now().date()
 
         form.save()
@@ -1744,10 +1759,10 @@ class GroupDisbursementView(FormView):
             transaction_no=transaction_no,
             payment_no=payment_no,
             borrower_no = borrower_no,
-            lender_no = lender_no
-            principal = disbursed_amount
-            loan_interest = allocation.interest_rate
-            principal_interest = disbursed_amount
+            lender_no = lender_no,
+            principal = disbursed_amount,
+            loan_interest = allocation.interest_rate,
+            principal_interest = disbursed_amount,
             amount_paid = 0,
             balance = disbursed_amount,
             loan_date=timezone.now().date()
@@ -1787,336 +1802,309 @@ class GroupDisbursementView(FormView):
                 return message_no
 
 
-class TransactionsView(View):
-    def get(self, request):
-        lender_no = request.session.get('lender_no')
-        borrower_no = request.session.get('borrower_no')
+class LoanPaymentView(View):
+    template_name = 'payment_form.html'
 
-        if not lender_no or not borrower_no:
-            return redirect('group_login')  # Redirect if lender number or borrower number is not in session
+    def calculate_loan_interest(self, principal, rate, duration_months):
+        """
+        Calculate loan interest based on principal, rate, and duration.
+        """
+        # Convert rate and duration to Decimal
+        rate = Decimal(rate)
+        duration_months = Decimal(duration_months)
+
+        # Calculate interest using Decimal arithmetic
+        return principal * rate * duration_months
+
+    def get(self, request, transaction_no):
+        # Fetch the loan object using the transaction number
+        loan = get_object_or_404(Loan, transaction_no=transaction_no)
+        form = PaymentForm()
+
+        # Ensure transaction_no is included in the context
+        context = {
+            'loan': loan,
+            'form': form,
+            'transaction_no': transaction_no,  # Initialize transaction_no here
+        }
+
+        # Render the template with the context
+        return render(request, self.template_name, context)
+
+    def post(self, request, transaction_no):
+        # Fetch the loan object using the transaction number
+        loan = get_object_or_404(Loan, transaction_no=transaction_no)
+        form = PaymentForm(request.POST)
+
+        if form.is_valid():
+            payment_amount = form.cleaned_data['payment_amount']
+
+            # Get the loan disbursement date
+            disbursement = get_object_or_404(Disbursement, transaction_no=transaction_no)
+            disbursement_date = disbursement.disbursement_date
+
+            # Calculate the time since disbursement in months
+            current_date = datetime.now().date()
+            time_elapsed_months = (
+                (current_date.year - disbursement_date.year) * 12 +
+                (current_date.month - disbursement_date.month)
+            )
+
+            # Set the loan duration in months
+            loan.loan_duration_months = time_elapsed_months
+
+            # Define the interest rate (e.g., 5% per month)
+            interest_rate = Decimal('0.05')  # Use Decimal for precise calculation
+
+            # Calculate new interest
+            new_loan_interest = self.calculate_loan_interest(loan.principal, interest_rate, loan.loan_duration_months)
+
+            # Update Account Details
+            borrower_no = loan.borrower_no
+            lender_no = loan.lender_no
+            borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
+            lender = Lender.objects.get(lender_no=lender_no)
+            
+            # Determine the borrower's account based on the borrower type
+            if borrower.borrower_type == 'group':
+                # For group borrowers, fetch the Group and corresponding Account
+                group = get_object_or_404(Group, borrower_no=borrower)
+                borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
+            else:
+                # For individual borrowers, use the national ID to find the GroupMember and their Account
+                borrower_id = borrower.national_id
+                member_account = get_object_or_404(GroupMember, national_id=borrower_id)
+                borrower_account = Account.objects.get(account_no=member_account.account)
+            
+            # Get the lender and its associated account    
+            lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
+
+            # Update lender's account balance
+            lender_account.account_bal += payment_amount
+            lender_account.save()
+
+            # Update borrower's account balance
+            borrower_account.account_bal -= payment_amount
+            borrower_account.save()
+
+            # Update loan details
+            loan.loan_interest = new_loan_interest
+            loan.principal_interest = loan.principal + loan.loan_interest
+
+            # Ensure payment doesn't exceed balance
+            if payment_amount > loan.balance:
+                payment_amount = loan.balance
+
+            loan.amount_paid += payment_amount
+            loan.balance = loan.principal_interest - loan.amount_paid
+            loan.loan_date = current_date
+            loan.save()
+
+            return redirect('borrower_loans')
+
+        # If form is not valid, return the context with transaction_no
+        context = {
+            'loan': loan,
+            'form': form,
+            'transaction_no': transaction_no,  # Ensure transaction_no is in the context for POST as well
+        }
+
+        return render(request, self.template_name, context)
+
+
+class GroupLoanPaymentView(View):
+    template_name = 'payment_form.html'
+
+    def calculate_loan_interest(self, principal, rate, duration_months):
+        """
+        Calculate loan interest based on principal, rate, and duration.
+        """
+        # Convert rate and duration to Decimal
+        rate = Decimal(rate)
+        duration_months = Decimal(duration_months)
+
+        # Calculate interest using Decimal arithmetic
+        return principal * rate * duration_months
+
+    def get(self, request, transaction_no):
+        # Fetch the loan object using the transaction number
+        loan = get_object_or_404(Loan, transaction_no=transaction_no)
+        form = PaymentForm()
+
+        # Ensure transaction_no is included in the context
+        context = {
+            'loan': loan,
+            'form': form,
+            'transaction_no': transaction_no,  # Initialize transaction_no here
+        }
+
+        # Render the template with the context
+        return render(request, self.template_name, context)
+
+    def post(self, request, transaction_no):
+        # Fetch the loan object using the transaction number
+        loan = get_object_or_404(Loan, transaction_no=transaction_no)
+        form = PaymentForm(request.POST)
+
+        if form.is_valid():
+            payment_amount = form.cleaned_data['payment_amount']
+
+            # Get the loan disbursement date
+            disbursement = get_object_or_404(Disbursement, transaction_no=transaction_no)
+            disbursement_date = disbursement.disbursement_date
+
+            # Calculate the time since disbursement in months
+            current_date = datetime.now().date()
+            time_elapsed_months = (
+                (current_date.year - disbursement_date.year) * 12 +
+                (current_date.month - disbursement_date.month)
+            )
+
+            # Set the loan duration in months
+            loan.loan_duration_months = time_elapsed_months
+
+            # Define the interest rate (e.g., 5% per month)
+            interest_rate = Decimal('0.05')  # Use Decimal for precise calculation
+
+            # Calculate new interest
+            new_loan_interest = self.calculate_loan_interest(loan.principal, interest_rate, loan.loan_duration_months)
+
+            # Update Account Details
+            borrower_no = loan.borrower_no
+            lender_no = loan.lender_no
+            borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
+            lender = Lender.objects.get(lender_no=lender_no)
+            
+            # Determine the borrower's account based on the borrower type
+            if borrower.borrower_type == 'group':
+                # For group borrowers, fetch the Group and corresponding Account
+                group = get_object_or_404(Group, borrower_no=borrower)
+                borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
+            else:
+                # For individual borrowers, use the national ID to find the GroupMember and their Account
+                borrower_id = borrower.national_id
+                member_account = get_object_or_404(GroupMember, national_id=borrower_id)
+                borrower_account = Account.objects.get(account_no=member_account.account)
+            
+            # Get the lender and its associated account    
+            lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
+
+            # Update lender's account balance
+            lender_account.account_bal += payment_amount
+            lender_account.save()
+
+            # Update borrower's account balance
+            borrower_account.account_bal -= payment_amount
+            borrower_account.save()
+
+            # Update loan details
+            loan.loan_interest = new_loan_interest
+            loan.principal_interest = loan.principal + loan.loan_interest
+
+            # Ensure payment doesn't exceed balance
+            if payment_amount > loan.balance:
+                payment_amount = loan.balance
+
+            loan.amount_paid += payment_amount
+            loan.balance = loan.principal_interest - loan.amount_paid
+            loan.loan_date = current_date
+            loan.save()
+
+            return redirect('borrower_loans')
+
+        # If form is not valid, return the context with transaction_no
+        context = {
+            'loan': loan,
+            'form': form,
+            'transaction_no': transaction_no,  # Ensure transaction_no is in the context for POST as well
+        }
+
+        return render(request, self.template_name, context)
+
+class GroupLoansView(ListView):
+    template_name = 'loans.html'
+    context_object_name = 'loans'
+
+    def get(self, request):
+        # Check if user is logged in and retrieve their information
+        username = request.session.get('username')
+        if not username:
+            return redirect('group_login')  # Redirect to login if username is not in session
 
         try:
-            # Filter allocations for the current lender number
-            allocations = Allocation.objects.filter(lender_no=lender_no)
+            # Get the user and related borrower and lender numbers
+            user = System_User.objects.get(username=username)
+            borrower_no = user.borrower_no
+            lender_no = user.lender_no
+        except System_User.DoesNotExist:
+            return redirect('group_login')
 
-            # Get application numbers related to the allocations
-            application_numbers = [allocation.allocation_no for allocation in allocations]
+        # Initialize loan lists as empty
+        loans_to_pay = []
+        loans_to_be_paid = []
 
-            # Filter applications for the current borrower number and related allocation numbers
-            applications = Application.objects.filter(borrower_no=borrower_no, allocation_no__in=application_numbers)
+        # Retrieve loans if borrower_no and lender_no are in session
+        if borrower_no:
+            loans_to_pay = Loan.objects.filter(borrower_no=borrower_no)
+        if lender_no:
+            loans_to_be_paid = Loan.objects.filter(lender_no=lender_no)
 
-            # Get application numbers related to the applications
-            application_numbers = [application.application_no for application in applications]
-
-            # Filter disbursements related to the current application numbers
-            disbursements = Disbursement.objects.filter(application_no__in=application_numbers)
-
-            # Filter payments related to the current application numbers
-            payments = Payment.objects.filter(transaction_no__in=application_numbers)
-
-        except Allocation.DoesNotExist:
-            allocations = []
-
-        except Application.DoesNotExist:
-            applications = []
-            disbursements = []
-            payments = []
-
-        return render(self.request, 'transactions.html', {'disbursements': disbursements, 'payments': payments})
-
-    
-
-class PaymentView(FormView):
-    form_class = PaymentForm
-    template_name = 'payment.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        transaction_no = self.kwargs['transaction_no']
-        kwargs['initial'] = {
-            'transaction_no': transaction_no,
-            'payment_no': unique_payment_number(),
-            'payment_date': datetime.now().date()
-        }
-        return kwargs
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        transaction_no = self.kwargs['transaction_no']
-        loan = get_object_or_404(Loans, transaction_no=transaction_no)
-        context['transaction_no'] = transaction_no
-        context['remaining_balance'] = loan.balance
-        context['total_amount'] = loan.principal_interest
-        return context
-
-    def get_success_url(self):
-        return reverse_lazy('home')
-
-    def form_valid(self, form):
-        transaction_no = self.kwargs['transaction_no']
-        payment_no = unique_payment_number()
-        payment_amount = form.cleaned_data['payment_amount']
-
-        # Retrieve the loan based on transaction_no
-        loan = get_object_or_404(Loans, transaction_no=transaction_no)
-
-        # Check if payment amount exceeds the balance
-        if payment_amount > loan.balance:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'transaction_no': transaction_no,
-                'error_payment_no': payment_no,
-                'error_message': f'Payment amount exceeds the remaining balance of {loan.balance}. Please enter a valid amount.',
-                'remaining_balance': loan.balance,
-                'total_amount': loan.principal_interest
-            })
-
-        # Update the loan balance
-        loan.amount_paid += payment_amount
-        loan.balance -= payment_amount
-        loan.save()
-
-        # Retrieve borrower based on loan
-        borrower_no = loan.borrower_no
-        borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
-        
-        # Retrieve lender based on loan allocation
-        allocation = get_object_or_404(Allocation, allocation_no=loan.allocation_no)
-        lender = get_object_or_404(Lender, lender_no=allocation.lender_no)
-
-        # Update the lender's account balance
-        lender_account = lender.account_no
-        lender_account.account_bal += payment_amount
-        lender_account.save()
-
-        # Update the borrower's account balance
-        borrower_account = borrower.account_no
-        borrower_account.account_bal -= payment_amount
-        borrower_account.save()
-
-        # Save the payment
-        form.instance.transaction_no = transaction_no
-        form.instance.payment_no = payment_no
-        form.instance.payment_date = datetime.now().date()
-
-        if Payment.objects.filter(payment_no=payment_no).exists():
-            return render(self.request, self.template_name, {
-                'form': form,
-                'transaction_no': transaction_no,
-                'error_payment_no': payment_no,
-                'error_message': 'Payment number already exists. Please try again.',
-                'remaining_balance': loan.balance,
-                'total_amount': loan.principal_interest
-            })
-
-        form.save()
-
-        # Create and save the message
-        message_no = self.generate_unique_message_number()
-        message = Message(
-            message_no=message_no,
-            sender_username=borrower.username,  # Borrower's username
-            recipient_username=lender.username,  # Lender's username
-            message_name='Payment Completed',
-            message_description=f'Payment of amount {payment_amount} has been processed for Transaction Number {transaction_no}.',
-            message_date=datetime.now().date()
-        )
-        message.save()
-
-        # Check if payment completes the loan
-        if loan.balance <= 0:
-            return render(self.request, self.template_name, {
-                'form': PaymentForm(),
-                'transaction_no': transaction_no,
-                'payment_no': payment_no,
-                'success_message': f'Payment successful. Payment Number: {payment_no}. The loan has been fully repaid.',
-                'remaining_balance': loan.balance,
-                'total_amount': loan.principal_interest
-            })
-
-        return render(self.request, self.template_name, {
-            'form': PaymentForm(),
-            'transaction_no': transaction_no,
-            'payment_no': payment_no,
-            'success_message': f'Payment successful. Payment Number: {payment_no}. Remaining balance: {loan.balance}.',
-            'remaining_balance': loan.balance,
-            'total_amount': loan.principal_interest
+        # Pass the loans to the template
+        return render(request, self.template_name, {
+            'loans_to_pay': loans_to_pay,
+            'loans_to_be_paid': loans_to_be_paid
         })
 
-    def form_invalid(self, form):
-        transaction_no = self.kwargs['transaction_no']
-        loan = get_object_or_404(Loans, transaction_no=transaction_no)
-        print(form.errors)  # Print form errors to console or log them for debugging
-        return render(self.request, self.template_name, {
-            'form': form,
-            'transaction_no': transaction_no,
-            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
-            'remaining_balance': loan.balance,
-            'total_amount': loan.principal_interest
-        })
+class BankLoansView(ListView):
+    template_name = 'bank_loans.html'
+    context_object_name = 'loans_to_be_paid'
 
-    def generate_unique_message_number(self):
-        while True:
-            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-            digits = ''.join(random.choices(string.digits, k=3))
-            message_no = letters + digits
-            if not Message.objects.filter(message_no=message_no).exists():
-                return message_no
+    def get(self, request):
+        username = request.session.get('username')
+        if not username:
+            return redirect('bank_login')  # Redirect to login if username is not in session
+        try:
+            # Query the user from the database using the username
+            user = System_User.objects.get(username=username)
+            lender_no = user.lender_no
             
+        except System_User.DoesNotExist:
+            # Handle the case where the user does not exist
+            return redirect('bank_login')
+
+        # Store  lender_no in session for future use
+        request.session['lender_no'] = lender_no
+
+        # Retrieve loans
+        loans_to_be_paid = Loan.objects.filter(lender_no = lender_no)
+
+        return render(request, self.template_name, {'loans_to_be_paid': loans_to_be_paid})
+    
+    
+class BorrowerLoansView(ListView):
+    template_name = 'borrower_loans.html'
+    context_object_name = 'loans_to_pay'
+
+    def get(self, request):
+        username = request.session.get('username')
+        if not username:
+            return redirect('borrower_login')  # Redirect to login if username is not in session
+        try:
+            # Query the user from the database using the username
+            user = System_User.objects.get(username=username)
+            borrower_no = user.borrower_no
             
-class GroupPaymentView(FormView):
-    form_class = PaymentForm
-    template_name = 'payment.html'
+            borrower = Borrower.objects.get(borrower_no=borrower_no)
+        except System_User.DoesNotExist:
+            # Handle the case where the user does not exist
+            return redirect('borrower_login')
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        transaction_no = self.kwargs['transaction_no']
-        kwargs['initial'] = {
-            'transaction_no': transaction_no,
-            'payment_no': unique_payment_number(),
-            'payment_date': datetime.now().date()
-        }
-        return kwargs
+        # Store borrower_no  in session for future use
+        request.session['borrower_no'] = borrower_no
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        transaction_no = self.kwargs['transaction_no']
-        loan = get_object_or_404(Loans, transaction_no=transaction_no)
-        context['transaction_no'] = transaction_no
-        context['remaining_balance'] = loan.balance
-        context['total_amount'] = loan.principal_interest
-        return context
-
-    def get_success_url(self):
-        return reverse_lazy('home')
-
-    def form_valid(self, form):
-        transaction_no = self.kwargs['transaction_no']
-        payment_no = unique_payment_number()
-        payment_amount = form.cleaned_data['payment_amount']
-
-        # Retrieve the loan based on transaction_no
-        loan = get_object_or_404(Loans, transaction_no=transaction_no)
-
-        # Check if payment amount exceeds the balance
-        if payment_amount > loan.balance:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'transaction_no': transaction_no,
-                'error_payment_no': payment_no,
-                'error_message': f'Payment amount exceeds the remaining balance of {loan.balance}. Please enter a valid amount.',
-                'remaining_balance': loan.balance,
-                'total_amount': loan.principal_interest
-            })
-
-        # Update the loan balance
-        loan.amount_paid += payment_amount
-        loan.balance -= payment_amount
-        loan.save()
-
-        # Retrieve borrower based on loan
-        borrower_no = loan.borrower_no
-        borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
+        # Retrieve Loans
+        loans_to_pay = Loan.objects.filter(borrower_no = borrower_no)
         
-        # Retrieve lender based on loan allocation
-        allocation = get_object_or_404(Allocation, allocation_no=loan.allocation_no)
-        lender = get_object_or_404(Lender, lender_no=allocation.lender_no)
-
-        # Update the lender's account balance
-        lender_account = lender.account_no
-        lender_account.account_bal += payment_amount
-        lender_account.save()
-
-        # Update the borrower's account balance
-        borrower_account = borrower.account_no
-        borrower_account.account_bal -= payment_amount
-        borrower_account.save()
-
-        # Save the payment
-        form.instance.transaction_no = transaction_no
-        form.instance.payment_no = payment_no
-        form.instance.payment_date = datetime.now().date()
-
-        if Payment.objects.filter(payment_no=payment_no).exists():
-            return render(self.request, self.template_name, {
-                'form': form,
-                'transaction_no': transaction_no,
-                'error_payment_no': payment_no,
-                'error_message': 'Payment number already exists. Please try again.',
-                'remaining_balance': loan.balance,
-                'total_amount': loan.principal_interest
-            })
-
-        form.save()
-
-        # Create and save the message
-        message_no = self.generate_unique_message_number()
-        message = Message(
-            message_no=message_no,
-            sender_username=borrower.username,  # Borrower's username
-            recipient_username=lender.username,  # Lender's username
-            message_name='Payment Completed',
-            message_description=f'Payment of amount {payment_amount} has been processed for Transaction Number {transaction_no}.',
-            message_date=datetime.now().date()
-        )
-        message.save()
-
-        # Check if payment completes the loan
-        if loan.balance <= 0:
-            return render(self.request, self.template_name, {
-                'form': PaymentForm(),
-                'transaction_no': transaction_no,
-                'payment_no': payment_no,
-                'success_message': f'Payment successful. Payment Number: {payment_no}. The loan has been fully repaid.',
-                'remaining_balance': loan.balance,
-                'total_amount': loan.principal_interest
-            })
-
-        return render(self.request, self.template_name, {
-            'form': PaymentForm(),
-            'transaction_no': transaction_no,
-            'payment_no': payment_no,
-            'success_message': f'Payment successful. Payment Number: {payment_no}. Remaining balance: {loan.balance}.',
-            'remaining_balance': loan.balance,
-            'total_amount': loan.principal_interest
-        })
-
-    def form_invalid(self, form):
-        transaction_no = self.kwargs['transaction_no']
-        loan = get_object_or_404(Loans, transaction_no=transaction_no)
-        print(form.errors)  # Print form errors to console or log them for debugging
-        return render(self.request, self.template_name, {
-            'form': form,
-            'transaction_no': transaction_no,
-            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
-            'remaining_balance': loan.balance,
-            'total_amount': loan.principal_interest
-        })
-
-    def generate_unique_message_number(self):
-        while True:
-            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-            digits = ''.join(random.choices(string.digits, k=3))
-            message_no = letters + digits
-            if not Message.objects.filter(message_no=message_no).exists():
-                return message_no
-
-
-class PaymentView(UpdateView):
-    model = Loan
-    fields = ['member_no', 'first_name', 'last_name', 'national_id', 'phone_number', 'dob', 'gender', 'group', 'grp_worth', 'account', 'approved']
-    widgets = {
-            'gender': forms.RadioSelect(choices=GroupMember.GENDER_CHOICES),
-        }
-    template_name = 'member_update_form.html'
-    success_url = reverse_lazy('member_list')
+        return render(request, self.template_name, {'loans_to_pay': loans_to_pay})
     
     
-class GroupPaymentView(UpdateView):
-    model = Loan
-    fields = ['member_no', 'first_name', 'last_name', 'national_id', 'phone_number', 'dob', 'gender', 'group', 'grp_worth', 'account', 'approved']
-    widgets = {
-            'gender': forms.RadioSelect(choices=GroupMember.GENDER_CHOICES),
-        }
-    template_name = 'member_update_form.html'
-    success_url = reverse_lazy('member_list')

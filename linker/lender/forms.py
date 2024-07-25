@@ -487,20 +487,15 @@ class ApplicationForm(forms.ModelForm):
             'loan_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Loan Amount'}),
         }
 
-
-
-              
-class PaymentForm(forms.ModelForm):
-     class Meta:
-        model = Payment
-        fields = ['payment_amount']
-        labels = {
-            'payment_amount': 'Amount ',
-        }
-        widgets = {
-            'payment_amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Amount'}),
-        }
-        
+class PaymentForm(forms.Form):
+    payment_amount = forms.DecimalField(
+        max_digits=15,
+        decimal_places=2,
+        label='Payment Amount',
+        min_value=0.01,
+        widget=forms.NumberInput(attrs={'placeholder': 'Enter payment amount'})
+    )
+      
 
 class DefaulterForm(forms.ModelForm):
     class Meta:
@@ -510,8 +505,6 @@ class DefaulterForm(forms.ModelForm):
         widgets = {
             'submission_date': forms.HiddenInput(),
         }
-
-
 
 
 class DefaulterUpdateForm(forms.ModelForm):

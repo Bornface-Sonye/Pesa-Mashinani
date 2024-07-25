@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f8;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #555;
+            margin-top: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Transactions</h1>
+    
+    <!-- Loans Table -->
+    <h2>Loans You Lent Out</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Transaction No</th>
+                <th>Initial Payment No</th>
+                <th>Borrower No</th>
+                <th>Amount Disbursed</th>
+                <th>Interest Charged</th>
+                <th>Total Amount</th>
+                <th>Amount Paid</th>
+                <th>Balance</th>
+                <th>Last Payment Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for loan in loans_to_be_paid %}
+                <tr>
+                    <td>{{ loan.transaction_no }}</td>
+                    <td>{{ loan.payment_no }}</td>
+                    <td>{{ loan.borrower_no }}</td>
+                    <td>{{ loan.principal }}</td>
+                    <td>{{ loan.loan_interest }}</td>
+                    <td>{{ loan.principal_interest }}</td>
+                    <td>{{ loan.amount_paid }}</td>
+                    <td>{{ loan.balance }}</td>
+                    <td>{{ loan.loan_date }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No loans found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

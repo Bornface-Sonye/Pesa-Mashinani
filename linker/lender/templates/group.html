@@ -136,18 +136,25 @@
                 <span class="tooltip">ALLOCATE LOAN</span>
             </li>
             <li>
-                <a href="{% url 'grp_allocations_list' %}" onclick="loadContent('allocations.html')">
+                <a href="{% url 'requests' %}" onclick="loadContent{% url 'allocations_list' %}">
+                    <i class='bx bx-user'></i>
+                    <span class="links_name">LOAN REQUESTS</span>
+                </a>
+                <span class="tooltip">LOAN REQUESTS</span>
+            </li>
+            <li>
+                <a href="{% url 'grp_allocations_list' %}" onclick="loadContent('transactions.html')">
                     <i class='bx bx-user'></i>
                     <span class="links_name">ALLOCATIONS</span>
                 </a>
                 <span class="tooltip">ALLOCATIONS</span>
             </li>
             <li>
-                <a href="{% url 'transactions_list' %}" onclick="loadContent('transactions.html')">
+                <a href="{% url 'loans' %}" onclick="loadContent(% url 'loans' %)">
                     <i class='bx bx-user'></i>
-                    <span class="links_name">TRANSACTIONS</span>
+                    <span class="links_name">LOANS</span>
                 </a>
-                <span class="tooltip">TRANSACTIONS</span>
+                <span class="tooltip">LOANS</span>
             </li>
             <li>
                 <a href="{% url 'member_list' %}" onclick="loadContent{% url 'allocations_list' %}">
@@ -162,14 +169,6 @@
                     <span class="links_name">ADD MEMBERS</span>
                 </a>
                 <span class="tooltip">ADD MEMBERS</span>
-            </li>
-
-            <li>
-                <a href="{% url 'member_list' %}" onclick="loadContent{% url 'allocations_list' %}">
-                    <i class='bx bx-user'></i>
-                    <span class="links_name">MEMBERS LOAN</span>
-                </a>
-                <span class="tooltip">MEMBERS LOAN</span>
             </li>
             <li>
                 <a href="{% url 'grouplogout' %}" onclick="showForm('logout')" >

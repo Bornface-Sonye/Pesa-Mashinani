@@ -52,56 +52,39 @@
     <h1>Transactions</h1>
     
     <!-- Disbursements Table -->
-    <h2>Disbursements</h2>
+    <h2>Loans Borrowed</h2>
     <table>
         <thead>
             <tr>
                 <th>Transaction No</th>
-                <th>Application No</th>
-                <th>Disbursed Amount</th>
-                <th>Disbursement Date</th>
-                <th>Action</th>
+                <th>Initial Payment No</th>
+                <th>Lender No</th>
+                <th>Amount Disbursed</th>
+                <th>Interest Charged</th>
+                <th>Total Amount</th>
+                <th>Amount Paid</th>
+                <th>Balance</th>
+                <th>Last Payment Date</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {% for disbursement in disbursements %}
+            {% for loan in loans_to_pay %}
                 <tr>
-                    <td>{{ disbursement.transaction_no }}</td>
-                    <td>{{ disbursement.application_no }}</td>
-                    <td>{{ disbursement.disbursed_amount }}</td>
-                    <td>{{ disbursement.disbursement_date }}</td>
-                    <td><a href="{% url 'payment' disbursement.transaction_no %}">Pay Loan</a></td>
+                    <td>{{ loan.transaction_no }}</td>
+                    <td>{{ loan.payment_no }}</td>
+                    <td>{{ loan.lender_no }}</td>
+                    <td>{{ loan.principal }}</td>
+                    <td>{{ loan.loan_interest }}</td>
+                    <td>{{ loan.principal_interest }}</td>
+                    <td>{{ loan.amount_paid }}</td>
+                    <td>{{ loan.balance }}</td>
+                    <td>{{ loan.loan_date }}</td>
+                    <td><a href="{% url 'payment' loan.transaction_no %}">Pay Loan</a></td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="5">No disbursements found.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <!-- Payments Table -->
-    <h2>Payments</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Payment No</th>
-                <th>Transaction No</th>
-                <th>Payment Amount</th>
-                <th>Payment Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for payment in payments %}
-                <tr>
-                    <td>{{ payment.payment_no }}</td>
-                    <td>{{ payment.transaction_no }}</td>
-                    <td>{{ payment.payment_amount }}</td>
-                    <td>{{ payment.payment_date }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="4">No payments found.</td>
+                    <td colspan="4">No loans found.</td>
                 </tr>
             {% endfor %}
         </tbody>
