@@ -364,6 +364,7 @@ class Disbursement(models.Model):
     disbursement_id = models.AutoField(primary_key=True, unique=True)
     transaction_no = models.CharField(unique=True, max_length=30, help_text="Enter the Transaction Number", blank=True)
     application_no = models.CharField(max_length=50, help_text="Enter the Application Number")
+    borrower_no = models.CharField(max_length=100, help_text="Enter Borrower Number:")
     disbursed_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text="Enter Amount to Disburse")
     disbursement_date = models.DateField(help_text="Enter Date of Disbursement")
 
@@ -373,7 +374,7 @@ class Disbursement(models.Model):
 
 class Payment(models.Model):
     payment_id = models.AutoField(primary_key=True, unique=True)
-    payment_no = models.CharField(unique=True, max_length=30, help_text="Enter the Payment Number", blank=True)
+    payment_no = models.CharField(max_length=30, help_text="Enter the Payment Number", blank=True)
     transaction_no = models.CharField(max_length=30, help_text="Enter the Transaction Number")
     payment_amount = models.DecimalField(max_digits=15, decimal_places=2, help_text="Enter Amount to Pay")
     payment_date = models.DateField(help_text="Enter Date of Disbursement")
@@ -385,11 +386,15 @@ class Payment(models.Model):
 class Loan(models.Model):
     loan_id = models.AutoField(primary_key=True, unique=True)
     transaction_no = models.CharField(max_length=30, help_text="Enter the Transaction Number")
-    payment_no = models.CharField(unique=True, max_length=30, help_text="Enter the Payment Number", blank=True)
+    payment_no = models.CharField(max_length=30, help_text="Enter the Payment Number", blank=True)
+    borrower_no = models.CharField(max_length=100, help_text="Enter Borrower Number:")
+    lender_no = models.CharField(max_length=100, help_text="Enter Lender Number:")
     principal = models.DecimalField(max_digits=15, decimal_places=2, help_text="Enter Amount to Pay")
+    loan_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Amount")
     principal_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Amount")
     amount_paid =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Paid")
     balance =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Balance")
+    loan_date = models.DateField(help_text="Enter Date of Disbursement")
 
     def __str__(self):
         return f"Loan - {self.transaction_no}"

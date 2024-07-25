@@ -6,7 +6,8 @@ from .views import (
     AllocationView, RequestsView, TransactionsView, ApplicationView, DisbursementView, PaymentView, Group_Dashboard_View, 
     AllocationsView, MemberListView, BankLoginView, GroupLoginView, BorrowerLoginView, BankSignUpView,
     BorrowerSignUpView, GroupSignUpView, AddGroupMemberView, MemberUpdateView, MemberDeleteView, AddGroupMemberView, 
-    GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, DefaulterDeleteView
+    GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, 
+    DefaulterDeleteView, GroupDisbursementView, GroupPaymentView
 )
 
 urlpatterns = [
@@ -42,6 +43,7 @@ urlpatterns = [
     #path('group/allocation/', GAllocationView.as_view(), name='group_allocation'),
     path('group/allocation/', GroupAllocationView.as_view(), name='group_allocation'),
     path('disbursement/<str:application_no>/', DisbursementView.as_view(), name='disbursement'),
+    path('group_disbursement/<str:application_no>/', GroupDisbursementView.as_view(), name='group_disbursement'),
     path('application/<str:allocation_no>/', ApplicationView.as_view(), name='application'),
     path('grp_application/<str:allocation_no>/', GroupApplicationView.as_view(), name='grp_application'),
     path('transactions/', TransactionsView.as_view(), name='transactions_list'),
@@ -49,6 +51,7 @@ urlpatterns = [
     path('grp_allocations/', GroupAllocationsView.as_view(), name='grp_allocations_list'),
     path('requests/', RequestsView.as_view(), name='requests_list'),
     path('payment/<str:transaction_no>/', PaymentView.as_view(), name='payment'),
+    path('group_payment/<str:transaction_no>/', GroupPaymentView.as_view(), name='group_payment'),
     path('members/', MemberListView.as_view(), name='member_list'),
     #path('group_dashboard/', Group_Dashboard_View.as_view(), name='group_dashboard'),
     path('members/update/<int:pk>/', MemberUpdateView.as_view(), name='update_member'),

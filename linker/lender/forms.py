@@ -464,6 +464,7 @@ class AllocationForm(forms.ModelForm):
 class DisbursementForm(forms.ModelForm):
      class Meta:
         model = Disbursement
+        exclude = ['transaction_no', 'application_no']
         fields = ['disbursed_amount']
         labels = {
             'disbursed_amount': 'Amount to Disburse',
