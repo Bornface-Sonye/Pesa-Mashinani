@@ -149,8 +149,17 @@ from .models import (
 
 from .forms import BorrowerForm, EntrepreneurForm, CivilServantForm, EmployeeForm, UnemployedForm, GroupForm
 from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementForm, GroupMemberForm
-from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm
+from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm, PesaSignUpForm
 from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm, DefaulterForm,  DefaulterUpdateForm, PaymentForm
+
+
+# views.py
+
+from django.views.generic import TemplateView
+
+class HelpPageView(TemplateView):
+    template_name = 'help_page.html'  # Specify your template name here
+
    
 
 def grouplogout(request):
@@ -593,7 +602,97 @@ class BankSignUpView(View):
             return render(request, self.template_name, {'form': form})
 
 
-        
+class PesaSignUpView(View):
+    template_name = 'pesa_signup.html'
+
+    def get(self, request):
+        form = PesaSignUpForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = PesaSignUpForm(request.POST)
+
+        if form.is_valid():
+            lender_no = "form.cleaned_data['lender_no']"
+            borrower_no = "form.cleaned_data['lender_no']"
+            username = form.cleaned_data['username']
+            password_hash = form.cleaned_data['password_hash']
+            
+            # Check if username already exists in System_User model
+            if System_User.objects.filter(username=username).exists():
+                form.add_error('username', "This username has already been used in the system!")
+                return render(request, self.template_name, {'form': form})
+
+            # Create the account if all checks pass
+            new_account = form.save(commit=False)
+            new_account.set_password(password_hash)
+            new_account.save()
+            return redirect('bank_login')
+        else:
+            # If the form is not valid, render the template with the form and errors
+            return render(request, self.template_name, {'form': form})
+
+class PesaLoginView(View):
+    template_name = 'pesa_login.html'
+
+    def get(self, request):
+        form = LoginForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+    
+            user = System_User.objects.filter(username=username).first()
+            if user and user.check_password(password):
+                 # Authentication successful
+                request.session['username'] = user.username  # Store username in session
+                return redirect(reverse('pesa'))
+            else:
+                # Authentication failed
+                error_message = 'Wrong Username or Password'
+                return render(request, self.template_name, {'form': form, 'error_message': error_message})
+        else:
+            error_message = 'Wrong Username or Password'
+            return render(request, self.template_name, {'form': form, 'error_message': error_message})
+
+
+class Pesa_Dashboard_View(View):
+    def get(self, request):
+        username = request.session.get('username')
+        if not username:
+            return redirect('pesa_login')  # Redirect to login if username is not in session
+
+        try:
+            user = System_User.objects.get(username=username)
+            
+        except System_User.DoesNotExist:
+            return redirect('pesa_login')
+
+        return render(request, 'pesa.html', {'user': user})
+
+class BorrowerListView(ListView):
+    model = Borrower
+    template_name = 'borrowers_list.html'  # Specify your template name here
+    context_object_name = 'borrowers'  # The name of the list in the template context
+
+    def get_queryset(self):
+        # Optionally filter or order the queryset here
+        return Borrower.objects.all()
+
+
+class LenderListView(ListView):
+    model = Lender
+    template_name = 'lenders_list.html'  # Specify your template name here
+    context_object_name = 'lenders'  # The name of the list in the template context
+
+    def get_queryset(self):
+        # Optionally filter or order the queryset here
+        return Lender.objects.all()
+
+                
 class GroupLoginView(View):
     template_name = 'group_login.html'
 
@@ -792,10 +891,6 @@ class AddGroupMemberView(View):
             'error_message': 'Form Invalid. Errors: {}'.format(form.errors)
         })
 
-
-
-
-
 class MemberListView(ListView):
     template_name = 'member_list.html'
     context_object_name = 'members'
@@ -895,7 +990,7 @@ class DefaultersView(View):
     def get(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank')  # Redirect to the bank dashboard if lender_no is not in session
 
         form = DefaulterForm(initial={'lender_no': lender_no})
         return render(request, self.template_name, {'form': form})
@@ -903,7 +998,7 @@ class DefaultersView(View):
     def post(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank')  # Redirect to the bank dashboard if lender_no is not in session
 
         form = DefaulterForm(request.POST)
 
@@ -942,7 +1037,7 @@ class DefaulterUpdateView(View):
     def get(self, request, pk):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank')  # Redirect to the bank dashboard if lender_no is not in session
 
         defaulter = get_object_or_404(Defaulter, pk=pk)
         if defaulter.lender_no != lender_no:
@@ -955,7 +1050,7 @@ class DefaulterUpdateView(View):
     def post(self, request, pk):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank')  # Redirect to the bank dashboard if lender_no is not in session
 
         defaulter = get_object_or_404(Defaulter, pk=pk)
         if defaulter.lender_no != lender_no:
@@ -977,7 +1072,7 @@ class DefaulterDeleteView(View):
     def post(self, request, pk):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank')  # Redirect to the bank dashboard if lender_no is not in session
 
         defaulter = get_object_or_404(Defaulter, pk=pk)
         if defaulter.lender_no != lender_no:
@@ -995,7 +1090,7 @@ class AllocationView(View):
     def get(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('bank_dashboard')  # Redirect to the bank dashboard if lender_no is not in session
+            return redirect('bank')  # Redirect to the bank dashboard if lender_no is not in session
 
         form = AllocationForm(initial={'lender_no': lender_no})
         return render(request, self.template_name, {'form': form})
@@ -1018,9 +1113,9 @@ class AllocationView(View):
                 account = Account.objects.get(account_no=lender.account_no.account_no)
                 account_balance = account.account_bal
             except Lender.DoesNotExist:
-                return redirect('bank_dashboard')
+                return redirect('bank')
             except Account.DoesNotExist:
-                return redirect('bank_dashboard')
+                return redirect('bank')
 
             # Ensure the amount is 2000 less than the account balance
             if amount > (account_balance - 2000):
@@ -1088,7 +1183,7 @@ class GroupAllocationView(View):
     def get(self, request):
         lender_no = request.session.get('lender_no')
         if not lender_no:
-            return redirect('group_dashboard')
+            return redirect('group')
 
         form = AllocationForm(initial={'lender_no': lender_no})
         return render(request, self.template_name, {'form': form})
@@ -1108,7 +1203,7 @@ class GroupAllocationView(View):
             try:
                 lender = Lender.objects.get(lender_no=lender_no)
             except Lender.DoesNotExist:
-                return redirect('group_dashboard')
+                return redirect('group')
 
             allocation = form.save(commit=False)
             allocation.allocation_no = allocation_no

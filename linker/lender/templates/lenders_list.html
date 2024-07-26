@@ -1,0 +1,82 @@
+<!-- templates/lender_list.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lender List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lender List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Lender ID</th>
+                <th>Lender Type</th>
+                <th>Email Address</th>
+                <th>Identification Number</th>
+                <th>Lender Number</th>
+                <th>Account Name</th>
+                <th>Username</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lender in lenders %}
+            <tr>
+                <td>{{ lender.lender_id }}</td>
+                <td>{{ lender.get_lender_type_display }}</td>
+                <td>{{ lender.email_address }}</td>
+                <td>{{ lender.lender_id_no }}</td>
+                <td>{{ lender.lender_no }}</td>
+                <td>{{ lender.account_no }}</td>
+                <td>{{ lender.username }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No lenders found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

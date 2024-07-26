@@ -3,16 +3,18 @@ from .views import (
     UserCreateView, BorrowerCreateView, EntrepreneurCreateView, CivilServantCreateView, EmployeeCreateView, UnemployedCreateView,
     GroupCreateView, LenderCreateView, BankCreateView, GroupLenderCreateView, HomePage_View, 
     Borrower_Dashboard_View, Group_Dashboard_View, Bank_Dashboard_View, grouplogout, banklogout, borrowerlogout,  BorrowerGroupCreateView, SuccessView, 
-    AllocationView, RequestsView,  ApplicationView, DisbursementView,  Group_Dashboard_View, 
+    AllocationView, RequestsView,  ApplicationView, DisbursementView, 
     AllocationsView, MemberListView, BankLoginView, GroupLoginView, BorrowerLoginView, BankSignUpView,
     BorrowerSignUpView, GroupSignUpView, AddGroupMemberView, MemberUpdateView, MemberDeleteView, AddGroupMemberView, 
     GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, 
     DefaulterDeleteView, GroupDisbursementView, LoanPaymentView, GroupLoansView, BankLoansView, 
-    BorrowerLoansView, GroupLoanPaymentView
+    BorrowerLoansView, GroupLoanPaymentView, PesaSignUpView, PesaLoginView, Pesa_Dashboard_View, BorrowerListView, 
+    LenderListView, HelpPageView
 )
 
 urlpatterns = [
     path('', HomePage_View.as_view(), name='home'),
+    path('help/', HelpPageView.as_view(), name='help-page'),
     path('register_user/', UserCreateView.as_view(), name='register_user'),
     path('register_borrower/', BorrowerCreateView.as_view(), name='register_borrower'),
     path('register_entrepreneur/<int:borrower_id>/<str:username>/', EntrepreneurCreateView.as_view(), name='register_entrepreneur'),
@@ -25,12 +27,17 @@ urlpatterns = [
     path('register_group_lender/<int:lender_id>/<str:username>/', GroupLenderCreateView.as_view(), name='register_group_lender'),
     path('group/signup/', GroupSignUpView.as_view(), name='group_signup'),
     path('group/login/', GroupLoginView.as_view(), name='group_login'),
+    path('pesa/signup/', PesaSignUpView.as_view(), name='pesa_signup'),
+    path('pesa/login/', PesaLoginView.as_view(), name='pesa_login'),
     path('borrower/signup/', BorrowerSignUpView.as_view(), name='borrower_signup'),
     path('borrower/login/', BorrowerLoginView.as_view(), name='borrower_login'),
     path('bank/signup/', BankSignUpView.as_view(), name='bank_signup'),
     path('bank/login/', BankLoginView.as_view(), name='bank_login'),
     path('borrower/', Borrower_Dashboard_View.as_view(), name='borrower'),
     path('group/', Group_Dashboard_View.as_view(), name='group'),
+    path('pesa/', Pesa_Dashboard_View.as_view(), name='pesa'),
+    path('borrowers/list/', BorrowerListView.as_view(), name='borrower-list'),
+    path('lenders/list/', LenderListView.as_view(), name='lender-list'),
     path('bank/', Bank_Dashboard_View.as_view(), name='bank'),
     path('defaulters/', DefaulterListView.as_view(), name='defaulter_list'),
     path('defaulters/add/', DefaultersView.as_view(), name='add_defaulter'),

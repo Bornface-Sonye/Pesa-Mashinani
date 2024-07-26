@@ -129,46 +129,39 @@
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="{% url 'group_allocation' %}" onclick="loadContent('add_members.html')">
+                <a href="{% url 'help-page' %}" onclick="loadContent('help-page')">
                     <i class='bx bx-chat'></i>
-                    <span class="links_name">ALLOCATE LOAN</span>
+                    <span class="links_name">HELP</span>
                 </a>
-                <span class="tooltip">ALLOCATE LOAN</span>
+                <span class="tooltip">HELP</span>
             </li>
             <li>
-                <a href="{% url 'requests_list' %}" onclick="loadContent{% url 'allocations_list' %}">
+                <a href="{% url 'register_borrower' %}" onclick="loadContent('transactions.html')">
                     <i class='bx bx-user'></i>
-                    <span class="links_name">LOAN REQUESTS</span>
+                    <span class="links_name">ADD BORROWER</span>
                 </a>
-                <span class="tooltip">LOAN REQUESTS</span>
+                <span class="tooltip">ADD BORROWER</span>
             </li>
             <li>
-                <a href="{% url 'grp_allocations_list' %}" onclick="loadContent('transactions.html')">
+                <a href="{% url 'register_lender' %}" onclick="loadContent(% url 'loans' %)">
                     <i class='bx bx-user'></i>
-                    <span class="links_name">ALLOCATIONS</span>
+                    <span class="links_name">ADD LENDER</span>
                 </a>
-                <span class="tooltip">ALLOCATIONS</span>
+                <span class="tooltip">ADD LENDER</span>
             </li>
             <li>
-                <a href="{% url 'loans' %}" onclick="loadContent(% url 'loans' %)">
+                <a href="{% url 'borrower-list' %}" onclick="loadContent{% url 'allocations_list' %}">
                     <i class='bx bx-user'></i>
-                    <span class="links_name">LOANS</span>
+                    <span class="links_name">VIEW BORROWERS</span>
                 </a>
-                <span class="tooltip">LOANS</span>
+                <span class="tooltip">VIEW BORROWERS</span>
             </li>
             <li>
-                <a href="{% url 'member_list' %}" onclick="loadContent{% url 'allocations_list' %}">
-                    <i class='bx bx-user'></i>
-                    <span class="links_name">MEMBERS</span>
-                </a>
-                <span class="tooltip">MEMBERS</span>
-            </li>
-            <li>
-                <a href="{% url 'add_group_member' %}" onclick="loadContent('add_members.html')">
+                <a href="{% url 'lender-list' %}" onclick="loadContent('add_members.html')">
                     <i class='bx bx-chat'></i>
-                    <span class="links_name">ADD MEMBERS</span>
+                    <span class="links_name">VIEW LENDERS</span>
                 </a>
-                <span class="tooltip">ADD MEMBERS</span>
+                <span class="tooltip">VIEW LENDERS</span>
             </li>
             <li>
                 <a href="{% url 'grouplogout' %}" onclick="showForm('logout')" >
@@ -195,7 +188,7 @@
     <!-- Header -->
     <div id="container">
         <div id="header" class="navbar-custom">
-        <h1 id="branding" class="navbar-brand" style="margin-left: 10px;"><a href="{% url 'group' %}">GROUP DASHBOARD</a></h1><br>
+        <h1 id="branding" class="navbar-brand" style="margin-left: 10px;"><a href="{% url 'group' %}">MASHINANI DASHBOARD</a></h1><br>
             <div id="branding"  style="justify-content: right; margin-right:20px">
                 <div style="float: right; text-align: right; white-space: nowrap;">
                     WELCOME,&nbsp;
