@@ -3,24 +3,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Pesa Mashinani | Dashboard</title>
+
+    <!-- CSS Stylesheets -->
     <link rel="stylesheet" href="{% static 'css/form.css' %}">
     <link rel="stylesheet" href="{% static 'css/dark_mode.css' %}">
     <link rel="stylesheet" href="{% static 'css/form_styles.css' %}">
-    <script src="{% static 'js/theme.js' %}" defer></script>
     <link rel="stylesheet" href="{% static 'css/forml.css' %}">
     <link rel="stylesheet" href="{% static 'css/report.css' %}">
     <link rel="stylesheet" href="{% static 'css/dash.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard_styles.css' %}">
-    <script src="{% static 'js/main.js' %}" defer></script>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap//3.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    <!-- JavaScript Files -->
+    <script src="{% static 'js/theme.js' %}" defer></script>
+    <script src="{% static 'js/main.js' %}" defer></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <!-- Meta Tags -->
     <meta name="robots" content="NONE,NOARCHIVE">
-    <!-- Custom styles -->
+
+    <!-- Custom Styles -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -83,14 +89,14 @@
             opacity: 1;
         }
         .slider .slide .text {
-            color: white;
+            color: black;
             font-style: italic;
             font-weight: bold;
-            font-size: 4em; /* Adjust font size as needed */
+            font-size: 2em; /* Adjust font size as needed */
             padding: 20px;
             border-radius: 5px;
             text-align: center;
-            /*background-color: rgba(255, 255, 255, 0.7); /* Light overlay for better contrast */
+            background-color: rgba(255, 255, 255, 0.7); /* Light overlay for better contrast */
             width: 100%;
             height: 100%;
             display: flex;
@@ -124,46 +130,30 @@
         </div>
         <ul class="nav-list">
             <li>
-                <a href="{% url 'group_allocation' %}" onclick="loadContent('add_members.html')">
-                    <i class='bx bx-chat'></i>
-                    <span class="links_name">ALLOCATE LOAN</span>
-                </a>
-                <span class="tooltip">ALLOCATE LOAN</span>
+                <i class='bx bx-search'></i>
+                <input type="text" placeholder="Search...">
+                <span class="tooltip">Search</span>
             </li>
             <li>
-                <a href="{% url 'requests_list' %}" onclick="loadContent('{% url 'allocations_list' %}')">
-                    <i class='bx bx-user'></i>
-                    <span class="links_name">LOAN REQUESTS</span>
+                <a href="#">
+                    <i class='bx bx-grid-alt'></i>
+                    <span class="links_name">Dashboard</span>
                 </a>
-                <span class="tooltip">LOAN REQUESTS</span>
+                <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="{% url 'grp_allocations_list' %}" onclick="loadContent('transactions.html')">
+                <a href="{% url 'allocations_list' %}" onclick="loadContent('allocations_list')">
                     <i class='bx bx-user'></i>
                     <span class="links_name">ALLOCATIONS</span>
                 </a>
                 <span class="tooltip">ALLOCATIONS</span>
             </li>
             <li>
-                <a href="{% url 'loans' %}" onclick="loadContent('{% url 'loans' %}')">
+                <a href="{% url 'borrower_loans' %}" onclick="loadContent('borrower_loans')">
                     <i class='bx bx-user'></i>
                     <span class="links_name">LOANS</span>
                 </a>
                 <span class="tooltip">LOANS</span>
-            </li>
-            <li>
-                <a href="{% url 'member_list' %}" onclick="loadContent('{% url 'allocations_list' %}')">
-                    <i class='bx bx-user'></i>
-                    <span class="links_name">MEMBERS</span>
-                </a>
-                <span class="tooltip">MEMBERS</span>
-            </li>
-            <li>
-                <a href="{% url 'add_group_member' %}" onclick="loadContent('add_members.html')">
-                    <i class='bx bx-chat'></i>
-                    <span class="links_name">ADD MEMBERS</span>
-                </a>
-                <span class="tooltip">ADD MEMBERS</span>
             </li>
             <li>
                 <a href="{% url 'messages' %}" onclick="loadContent('messages')">
@@ -191,53 +181,50 @@
         </ul>
     </div>
 
-    <!-- Container -->
+    <!-- Main content -->
     <section class="home-section">
-        <!-- Header -->
-        <div id="container">
-            <div id="header" class="navbar-custom">
-                <h1 id="branding" class="navbar-brand" style="margin-left: 10px;"><a href="{% url 'group' %}">GROUP DASHBOARD</a></h1><br>
-                <div id="branding" style="justify-content: right; margin-right:20px">
-                    <div style="float: right; text-align: right; white-space: nowrap;">
-                        WELCOME,&nbsp;
-                        <strong style="text-transform: uppercase;">{{ request.session.username }}</strong>
+        <div id="header" class="navbar-custom">
+            <h1 id="branding" class="navbar-brand" style="margin-left: 50px;">
+                <a href="{% url 'group' %}">BORROWER DASHBOARD</a>
+            </h1>
+            <div id="branding" style="justify-content: right; margin-right: 20px;">
+                <div style="float: right; text-align: right; white-space: nowrap;">
+                    WELCOME,&nbsp;&nbsp;
+                    <strong style="text-transform: uppercase;">{{ request.session.username }}</strong>
+                </div>
+                <button class="theme-toggle">
+                    <div class="visually-hidden theme-label-when-auto">Toggle theme (current theme: auto)</div>
+                    <div class="visually-hidden theme-label-when-light">Toggle theme (current theme: light)</div>
+                    <div class="visually-hidden theme-label-when-dark">Toggle theme (current theme: dark)</div>
+                    <svg aria-hidden="true" class="theme-icon-when-auto">
+                        <use xlink:href="#icon-auto"></use>
+                    </svg>
+                    <svg aria-hidden="true" class="theme-icon-when-dark">
+                        <use xlink:href="#icon-moon"></use>
+                    </svg>
+                    <svg aria-hidden="true" class="theme-icon-when-light">
+                        <use xlink:href="#icon-sun"></use>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="left-div">
+                <div class="slider">
+                    <div class="slide active" style="background-image: url('{% static 'img/bg/slider_1.jpg' %}');">
+                        <div class="text">"Lending and borrowing isn't just about money—it's<br> an investment in dreams and ambitions. By providing <br>access to financial resources, we create opportunities <br>for growth, innovation, and change, turning aspirations into reality."</div>
                     </div>
-                    <button class="theme-toggle">
-                        <div class="visually-hidden theme-label-when-auto">Toggle theme (current theme: auto)</div>
-                        <div class="visually-hidden theme-label-when-light">Toggle theme (current theme: light)</div>
-                        <div class="visually-hidden theme-label-when-dark">Toggle theme (current theme: dark)</div>
-                        <svg aria-hidden="true" class="theme-icon-when-auto">
-                            <use xlink:href="#icon-auto" />
-                        </svg>
-                        <svg aria-hidden="true" class="theme-icon-when-dark">
-                            <use xlink:href="#icon-moon" />
-                        </svg>
-                        <svg aria-hidden="true" class="theme-icon-when-light">
-                            <use xlink:href="#icon-sun" />
-                        </svg>
-                    </button>
+                    <div class="slide" style="background-image: url('{% static 'img/bg/slider_2.jpg' %}');">
+                        <div class="text">"Lending and borrowing are tools that not only uplift<br> individuals but also strengthen communities, fostering <br>a cycle of prosperity and progress."</div>
+                    </div>
+                    <div class="slide" style="background-image: url('{% static 'img/bg/slider_3.jpg' %}');">
+                        <div class="text">"Believe in the power of financial support to unlock potential, <br>fuel dreams, and build a better tomorrow."</div>
+                    </div>
                 </div>
             </div>
-            <!-- END Header -->
-
-            <div class="container">
-                <div class="left-div">
-                    <!-- Placeholder for dynamic content based on links -->
-                    <div class="slider">
-                        <div class="slide active" style="background-image: url('{% static 'img/bg/bg1.jpg' %}');">
-                            <!--<div class="text">"Lending and borrowing isn't just about money—it's<br> an investment in dreams and ambitions. By providing <br>access to financial resources, we create opportunities <br>for growth, innovation, and change, turning aspirations into reality."</div> -->
-                        </div>
-                        <div class="slide" style="background-image: url('{% static 'img/bg/g.png' %}');">
-                            <div class="text">"Lending and borrowing are tools that not only uplift<br> individuals but also strengthen communities, fostering <br>a cycle of prosperity and progress."</div>
-                        </div>
-                        <div class="slide" style="background-image: url('{% static 'img/bg/bg3.jpg' %}');">
-                           <!-- <div class="text">"Believe in the power of financial support to unlock potential, <br>fuel dreams, and build a better tomorrow."</div> -->
-                        </div>
-                    </div>
-                </div>
-                <div class="right-div">
-                    <!-- Right-side content -->
-                </div>
+            <div class="right-div">
+                <!-- Right-side content -->
             </div>
         </div>
     </section>

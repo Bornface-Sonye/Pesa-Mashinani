@@ -15,7 +15,7 @@ from .views import (
 urlpatterns = [
     path('', HomePage_View.as_view(), name='home'),
     path('help/', HelpPageView.as_view(), name='help-page'),
-    path('logout/', LogoutView.as_view(), name='logout'),LogoutView
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('register_user/', UserCreateView.as_view(), name='register_user'),
     path('register_borrower/', BorrowerCreateView.as_view(), name='register_borrower'),
     path('register_entrepreneur/<int:borrower_id>/<str:username>/', EntrepreneurCreateView.as_view(), name='register_entrepreneur'),

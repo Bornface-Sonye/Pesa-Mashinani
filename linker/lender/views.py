@@ -168,15 +168,11 @@ class HelpPageView(TemplateView):
 
 
 class LogoutView(View):
-    """
-    Handle user logout via POST request to ensure CSRF protection.
-    """
 
-    @method_decorator(require_POST)
-    def post(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         django_logout(request)
         return redirect('home')  # Redirect to home page after logout
- 
+
 
 class HomePage_View(View):
     def get(self,request):
@@ -2221,7 +2217,7 @@ class MessagesListView(ListView):
         # Retrieve loans if borrower_no and lender_no are in session
         if username:
             received_mssgs = Message.objects.filter(recipient_username=username)
-        if lender_no:
+        if username:
             sent_mssgs = Message.objects.filter(sender_username=username)
 
         # Pass the loans to the template
