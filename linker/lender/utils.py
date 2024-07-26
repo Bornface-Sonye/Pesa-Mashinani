@@ -405,3 +405,34 @@ def generate_lender_number(email_address):
     # Generate the unique identifier
     unique_id = f"{local_part}/001/{current_year}@lender"
     return unique_id
+
+def calculate_time_elapsed_in_months(disbursement_date):
+    # Get the current date
+    current_date = datetime.now().date()
+    
+    # Calculate the time elapsed in months
+    time_elapsed_months = (
+        (current_date.year - disbursement_date.year) * 12 +
+        (current_date.month - disbursement_date.month)
+    )
+    
+    return time_elapsed_months
+
+def calculate_compound_interest(principal, monthly_rate, number_of_months):
+        """
+        Calculate compound interest based on principal, annual rate, and number of years.
+        
+        :param principal: The principal amount (initial loan amount).
+        :param monthly_rate: The annual interest rate (in percentage, e.g., 5 for 5%).
+        :param number_of_months: The number of years the interest is compounded.
+        :return: The compound interest earned.
+        """
+        # Convert inputs to Decimal
+        principal = Decimal(principal)
+        monthly_rate = Decimal(monthly_rate)
+        number_of_months = Decimal(number_of_months)
+        
+        # Calculate the amount after interest
+        amount = principal * (1 + monthly_rate / 100) ** number_of_months
+        
+        return amount

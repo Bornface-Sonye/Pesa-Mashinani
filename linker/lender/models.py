@@ -391,7 +391,7 @@ class Loan(models.Model):
     borrower_no = models.CharField(max_length=100, help_text="Enter Borrower Number:")
     lender_no = models.CharField(max_length=100, help_text="Enter Lender Number:")
     principal = models.DecimalField(max_digits=15, decimal_places=2, help_text="Enter Amount to Pay")
-    loan_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Amount")
+    loan_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Interest Rate")
     principal_interest = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Amount")
     amount_paid =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Total Paid")
     balance =  models.DecimalField(max_digits=15, decimal_places=2, help_text="Balance")

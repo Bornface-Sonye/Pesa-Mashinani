@@ -1899,17 +1899,7 @@ class GroupDisbursementView(FormView):
 
 class LoanPaymentView(View):
     template_name = 'payment_form.html'
-
-    def calculate_loan_interest(self, principal, rate, duration_months):
-        """
-        Calculate loan interest based on principal, rate, and duration.
-        """
-        # Convert rate and duration to Decimal
-        rate = Decimal(rate)
-        duration_months = Decimal(duration_months)
-
-        # Calculate interest using Decimal arithmetic
-        return principal * rate * duration_months
+    
 
     def get(self, request, transaction_no):
         # Fetch the loan object using the transaction number
@@ -1937,22 +1927,6 @@ class LoanPaymentView(View):
             # Get the loan disbursement date
             disbursement = get_object_or_404(Disbursement, transaction_no=transaction_no)
             disbursement_date = disbursement.disbursement_date
-
-            # Calculate the time since disbursement in months
-            current_date = datetime.now().date()
-            time_elapsed_months = (
-                (current_date.year - disbursement_date.year) * 12 +
-                (current_date.month - disbursement_date.month)
-            )
-
-            # Set the loan duration in months
-            loan.loan_duration_months = time_elapsed_months
-
-            # Define the interest rate (e.g., 5% per month)
-            interest_rate = Decimal('0.05')  # Use Decimal for precise calculation
-
-            # Calculate new interest
-            new_loan_interest = self.calculate_loan_interest(loan.principal, interest_rate, loan.loan_duration_months)
 
             # Update Account Details
             borrower_no = loan.borrower_no
@@ -1983,8 +1957,16 @@ class LoanPaymentView(View):
             borrower_account.save()
 
             # Update loan details
-            loan.loan_interest = new_loan_interest
-            loan.principal_interest = loan.principal + loan.loan_interest
+            
+            # Define the interest rate 
+            interest_rate = loan.loan_interest 
+            loan_duration = disbursement.loan_duration_months
+
+            # Calculate new interest
+            elapsed_months = calculate_time_elapsed_in_months(disbursement_date)
+            new_loan_interest = calculate_compound_interest(loan.balance, interest_rate, elapsed_months)
+            loan.loan_interest = interest_rate
+            loan.principal_interest = new_loan_interest
 
             # Ensure payment doesn't exceed balance
             if payment_amount > loan.balance:
@@ -1992,7 +1974,7 @@ class LoanPaymentView(View):
 
             loan.amount_paid += payment_amount
             loan.balance = loan.principal_interest - loan.amount_paid
-            loan.loan_date = current_date
+            loan.loan_date = datetime.now().date()
             loan.save()
 
             return redirect('borrower_loans')
@@ -2048,22 +2030,6 @@ class GroupLoanPaymentView(View):
             disbursement = get_object_or_404(Disbursement, transaction_no=transaction_no)
             disbursement_date = disbursement.disbursement_date
 
-            # Calculate the time since disbursement in months
-            current_date = datetime.now().date()
-            time_elapsed_months = (
-                (current_date.year - disbursement_date.year) * 12 +
-                (current_date.month - disbursement_date.month)
-            )
-
-            # Set the loan duration in months
-            loan.loan_duration_months = time_elapsed_months
-
-            # Define the interest rate (e.g., 5% per month)
-            interest_rate = Decimal('0.05')  # Use Decimal for precise calculation
-
-            # Calculate new interest
-            new_loan_interest = self.calculate_loan_interest(loan.principal, interest_rate, loan.loan_duration_months)
-
             # Update Account Details
             borrower_no = loan.borrower_no
             lender_no = loan.lender_no
@@ -2093,8 +2059,17 @@ class GroupLoanPaymentView(View):
             borrower_account.save()
 
             # Update loan details
-            loan.loan_interest = new_loan_interest
-            loan.principal_interest = loan.principal + loan.loan_interest
+             # Update loan details
+            
+            # Define the interest rate 
+            interest_rate = loan.loan_interest  # Use Decimal for precise calculation
+            loan_duration = disbursement.loan_duration_months
+
+            # Calculate new interest
+            elapsed_months = calculate_time_elapsed_in_months(disbursement_date)
+            new_loan_interest = calculate_compound_interest(loan.balance, interest_rate, elapsed_months)
+            loan.loan_interest = interest_rate
+            loan.principal_interest = new_loan_interest
 
             # Ensure payment doesn't exceed balance
             if payment_amount > loan.balance:
@@ -2102,9 +2077,9 @@ class GroupLoanPaymentView(View):
 
             loan.amount_paid += payment_amount
             loan.balance = loan.principal_interest - loan.amount_paid
-            loan.loan_date = current_date
+            loan.loan_date = datetime.now().date()
             loan.save()
-
+            
             return redirect('borrower_loans')
 
         # If form is not valid, return the context with transaction_no
