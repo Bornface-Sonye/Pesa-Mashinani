@@ -22,6 +22,7 @@ from django.urls import reverse_lazy
 from .forms import ApplicationForm
 from .models import Application
 from datetime import datetime
+from decimal import Decimal
 
 
 

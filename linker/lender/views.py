@@ -1633,12 +1633,7 @@ class DisbursementView(FormView):
         # Check if the entered amount is valid
         entered_amount = form.cleaned_data.get('disbursed_amount')
         if entered_amount > proposed_amount:
-            return render(self.request, self.template_name, {
-                'form': form,
-                'application_no': application_no,
-                'transaction_no': transaction_no,
-                'error_message': 'Entered amount cannot be greater than proposed amount.'
-            })
+            entered_amount = proposed_amount
 
         # Determine the borrower's account based on the borrower type
         if borrower.borrower_type == 'group':
@@ -1659,6 +1654,7 @@ class DisbursementView(FormView):
             return render(self.request, self.template_name, {
                 'form': form,
                 'application_no': application_no,
+                'error_transaction_no': form.cleaned_data.get('transaction_no', None),
                 'error_message': f'Insufficient account balance. Current balance is {lender_account.account_bal}.'
             })
 
@@ -1730,7 +1726,7 @@ class DisbursementView(FormView):
         return render(self.request, self.template_name, {
             'form': form,
             'application_no': application_no,
-            'transaction_no': form.cleaned_data.get('transaction_no', None),
+            'error_transaction_no': form.cleaned_data.get('transaction_no', None),
             'error_message': 'There was an error with your disbursement. Please correct the errors.'
         })
 
@@ -1786,8 +1782,7 @@ class GroupDisbursementView(FormView):
         # Check if the entered amount is valid
         entered_amount = form.cleaned_data.get('disbursed_amount')
         if entered_amount > proposed_amount:
-            return self.render_error(form, application_no, transaction_no, 'Entered amount cannot be greater than proposed amount.')
-        
+            entered_amount = proposed_amount        
         
         # Determine the borrower's account based on the borrower type
         if borrower.borrower_type == 'group':
@@ -1804,8 +1799,13 @@ class GroupDisbursementView(FormView):
 
         # Check if the lender's account has sufficient balance
         if lender_account.account_bal < entered_amount:
-            return self.render_error(form, application_no, transaction_no, f'Insufficient account balance. Current balance is {lender_account.account_bal}.')
-
+            return render(self.request, self.template_name, {
+                'form': form,
+                'application_no': application_no,
+                'error_transaction_no': form.cleaned_data.get('transaction_no', None),
+                'error_message': f'Insufficient account balance. Current balance is {lender_account.account_bal}.'
+            })
+            
         # Update lender's account balance
         lender_account.account_bal -= entered_amount
         lender_account.save()
@@ -1899,94 +1899,97 @@ class GroupDisbursementView(FormView):
 
 class LoanPaymentView(View):
     template_name = 'payment_form.html'
-    
 
     def get(self, request, transaction_no):
-        # Fetch the loan object using the transaction number
         loan = get_object_or_404(Loan, transaction_no=transaction_no)
         form = PaymentForm()
 
-        # Ensure transaction_no is included in the context
         context = {
             'loan': loan,
             'form': form,
-            'transaction_no': transaction_no,  # Initialize transaction_no here
+            'transaction_no': transaction_no,
+            'success_message': request.GET.get('success_message', ''),
+            'error_message': request.GET.get('error_message', ''),
         }
 
-        # Render the template with the context
         return render(request, self.template_name, context)
 
     def post(self, request, transaction_no):
-        # Fetch the loan object using the transaction number
         loan = get_object_or_404(Loan, transaction_no=transaction_no)
         form = PaymentForm(request.POST)
 
         if form.is_valid():
             payment_amount = form.cleaned_data['payment_amount']
 
-            # Get the loan disbursement date
             disbursement = get_object_or_404(Disbursement, transaction_no=transaction_no)
             disbursement_date = disbursement.disbursement_date
 
-            # Update Account Details
             borrower_no = loan.borrower_no
             lender_no = loan.lender_no
             borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
-            lender = Lender.objects.get(lender_no=lender_no)
-            
-            # Determine the borrower's account based on the borrower type
+            lender = get_object_or_404(Lender, lender_no=lender_no)
+
             if borrower.borrower_type == 'group':
-                # For group borrowers, fetch the Group and corresponding Account
                 group = get_object_or_404(Group, borrower_no=borrower)
                 borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
             else:
-                # For individual borrowers, use the national ID to find the GroupMember and their Account
                 borrower_id = borrower.national_id
                 member_account = get_object_or_404(GroupMember, national_id=borrower_id)
-                borrower_account = Account.objects.get(account_no=member_account.account)
-            
-            # Get the lender and its associated account    
+                borrower_account = get_object_or_404(Account, account_no=member_account.account)
+
             lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
 
-            # Update lender's account balance
-            lender_account.account_bal += payment_amount
-            lender_account.save()
+            if borrower_account.account_bal < payment_amount:
+                error_message = 'You have Insufficient Account Balance to Complete this Transaction.'
+                return render(request, self.template_name, {
+                    'loan': loan,
+                    'form': form,
+                    'transaction_no': transaction_no,
+                    'error_message': error_message,
+                })
 
-            # Update borrower's account balance
-            borrower_account.account_bal -= payment_amount
-            borrower_account.save()
-
-            # Update loan details
-            
-            # Define the interest rate 
-            interest_rate = loan.loan_interest 
+            interest_rate = loan.loan_interest
             loan_duration = disbursement.loan_duration_months
 
-            # Calculate new interest
             elapsed_months = calculate_time_elapsed_in_months(disbursement_date)
             new_loan_interest = calculate_compound_interest(loan.balance, interest_rate, elapsed_months)
             loan.loan_interest = interest_rate
             loan.principal_interest = new_loan_interest
 
-            # Ensure payment doesn't exceed balance
+            # Ensure payment amount does not exceed the loan balance
             if payment_amount > loan.balance:
-                payment_amount = loan.balance
+                error_message = 'Payment amount exceeds the current loan balance. Please enter a valid amount.'
+                return render(request, self.template_name, {
+                    'loan': loan,
+                    'form': form,
+                    'transaction_no': transaction_no,
+                    'error_message': error_message,
+                })
 
             loan.amount_paid += payment_amount
             loan.balance = loan.principal_interest - loan.amount_paid
+            if loan.balance < 0:
+                loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
+            
+            borrower_account.account_bal -= payment_amount
+            borrower_account.save()
+            # Update lender's and borrower's account balances
+            lender_account.account_bal += payment_amount
+            lender_account.save()
 
-            return redirect('borrower_loans')
+            success_message = f'Payment of {payment_amount} received successfully. Loan balance updated.'
+            return redirect(f'{reverse("payment", args=[transaction_no])}?success_message={success_message}')
 
-        # If form is not valid, return the context with transaction_no
-        context = {
+        error_message = 'Payment failed. Please correct the errors below.'
+        return render(request, self.template_name, {
             'loan': loan,
             'form': form,
-            'transaction_no': transaction_no,  # Ensure transaction_no is in the context for POST as well
-        }
+            'transaction_no': transaction_no,
+            'error_message': error_message,
+        })
 
-        return render(request, self.template_name, context)
 
 
 class GroupLoanPaymentView(View):
@@ -1996,100 +1999,98 @@ class GroupLoanPaymentView(View):
         """
         Calculate loan interest based on principal, rate, and duration.
         """
-        # Convert rate and duration to Decimal
         rate = Decimal(rate)
         duration_months = Decimal(duration_months)
-
-        # Calculate interest using Decimal arithmetic
         return principal * rate * duration_months
 
     def get(self, request, transaction_no):
-        # Fetch the loan object using the transaction number
         loan = get_object_or_404(Loan, transaction_no=transaction_no)
         form = PaymentForm()
-
-        # Ensure transaction_no is included in the context
         context = {
             'loan': loan,
             'form': form,
-            'transaction_no': transaction_no,  # Initialize transaction_no here
+            'transaction_no': transaction_no,
         }
-
-        # Render the template with the context
         return render(request, self.template_name, context)
 
     def post(self, request, transaction_no):
-        # Fetch the loan object using the transaction number
         loan = get_object_or_404(Loan, transaction_no=transaction_no)
         form = PaymentForm(request.POST)
 
         if form.is_valid():
             payment_amount = form.cleaned_data['payment_amount']
 
-            # Get the loan disbursement date
             disbursement = get_object_or_404(Disbursement, transaction_no=transaction_no)
             disbursement_date = disbursement.disbursement_date
 
-            # Update Account Details
             borrower_no = loan.borrower_no
             lender_no = loan.lender_no
             borrower = get_object_or_404(Borrower, borrower_no=borrower_no)
-            lender = Lender.objects.get(lender_no=lender_no)
-            
-            # Determine the borrower's account based on the borrower type
+            lender = get_object_or_404(Lender, lender_no=lender_no)
+
             if borrower.borrower_type == 'group':
-                # For group borrowers, fetch the Group and corresponding Account
                 group = get_object_or_404(Group, borrower_no=borrower)
                 borrower_account = get_object_or_404(Account, account_no=group.account.account_no)
             else:
-                # For individual borrowers, use the national ID to find the GroupMember and their Account
                 borrower_id = borrower.national_id
                 member_account = get_object_or_404(GroupMember, national_id=borrower_id)
-                borrower_account = Account.objects.get(account_no=member_account.account)
-            
-            # Get the lender and its associated account    
-            lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
+                borrower_account = get_object_or_404(Account, account_no=member_account.account)
+                
+            if borrower_account.account_bal < payment_amount:
+                return render(request, self.template_name, {
+                    'loan': loan,
+                    'form': form,
+                    'transaction_no': transaction_no,
+                    'error_message': 'You have Insufficient Account Balance to Complete this Transaction.'
+                })
 
-            # Update lender's account balance
-            lender_account.account_bal += payment_amount
-            lender_account.save()
-
-            # Update borrower's account balance
-            borrower_account.account_bal -= payment_amount
-            borrower_account.save()
+            lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)         
 
             # Update loan details
-             # Update loan details
-            
-            # Define the interest rate 
-            interest_rate = loan.loan_interest  # Use Decimal for precise calculation
+            interest_rate = loan.loan_interest
             loan_duration = disbursement.loan_duration_months
-
-            # Calculate new interest
             elapsed_months = calculate_time_elapsed_in_months(disbursement_date)
             new_loan_interest = calculate_compound_interest(loan.balance, interest_rate, elapsed_months)
             loan.loan_interest = interest_rate
             loan.principal_interest = new_loan_interest
 
-            # Ensure payment doesn't exceed balance
+            # Ensure payment does not reduce balance below 0
             if payment_amount > loan.balance:
-                payment_amount = loan.balance
+                return render(request, self.template_name, {
+                    'loan': loan,
+                    'form': form,
+                    'transaction_no': transaction_no,
+                    'error_message': 'Payment amount exceeds the current loan balance.'
+                })
 
             loan.amount_paid += payment_amount
             loan.balance = loan.principal_interest - loan.amount_paid
+            if loan.balance < 0:
+                loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
             
-            return redirect('borrower_loans')
+            borrower_account.account_bal -= payment_amount
+            borrower_account.save()
+            # Update lender's and borrower's account balances
+            lender_account.account_bal += payment_amount
+            lender_account.save()
 
-        # If form is not valid, return the context with transaction_no
-        context = {
+            return render(request, self.template_name, {
+                'loan': loan,
+                'form': PaymentForm(),
+                'transaction_no': transaction_no,
+                'success_message': 'Payment processed successfully.'
+            })
+
+        return render(request, self.template_name, {
             'loan': loan,
             'form': form,
-            'transaction_no': transaction_no,  # Ensure transaction_no is in the context for POST as well
-        }
+            'transaction_no': transaction_no,
+            'error_message': 'Form Invalid. Errors: {}'.format(form.errors),
+        })
 
-        return render(request, self.template_name, context)
+
 
 class GroupLoansView(ListView):
     template_name = 'loans.html'

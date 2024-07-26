@@ -3,7 +3,7 @@
 {% block content %}
 <div class="form-container">
     <h1 class="page-title">Loan Payment Form</h1>
-    <form method="post" action="{% url 'payment' transaction_no=transaction_no %}">
+    <form method="post" action="{% url 'group_payment' transaction_no=transaction_no %}">
         {% csrf_token %}
         
         <!-- Payment Information Section -->

@@ -60,7 +60,6 @@ urlpatterns = [
     path('group_payment/<str:transaction_no>/', GroupLoanPaymentView.as_view(), name='group_payment'),
     path('members/', MemberListView.as_view(), name='member_list'),
     path('payment/<str:transaction_no>/', LoanPaymentView.as_view(), name='payment'),
-    path('group_payment/<str:transaction_no>/', GroupLoanPaymentView.as_view(), name='group_payment'),
     path('members/update/<int:pk>/', MemberUpdateView.as_view(), name='update_member'),
     path('members/delete/<int:pk>/', MemberDeleteView.as_view(), name='delete_member'),
     path('add_member/', AddGroupMemberView.as_view(), name='add_group_member'),
