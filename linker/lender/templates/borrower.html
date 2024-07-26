@@ -129,28 +129,28 @@
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="{% url 'allocations_list' %}" onclick="loadContent('allocations.html')">
+                <a href="{% url 'allocations_list' %}" onclick="loadContent('allocations_list')">
                     <i class='bx bx-user'></i>
                     <span class="links_name">ALLOCATIONS</span>
                 </a>
                 <span class="tooltip">ALLOCATIONS</span>
             </li>
             <li>
-                <a href="{% url 'borrower_loans' %}" onclick="loadContent('transactions.html')">
+                <a href="{% url 'borrower_loans' %}" onclick="loadContent('borrower_loans')">
                     <i class='bx bx-user'></i>
                     <span class="links_name">LOANS</span>
                 </a>
                 <span class="tooltip">LOANS</span>
             </li>
             <li>
-                <a href="{% url 'allocations_list' %}" onclick="loadContent('add_members.html')">
+                <a href="{% url 'messages' %}" onclick="loadContent('messages')">
                     <i class='bx bx-chat'></i>
                     <span class="links_name">MESSAGES</span>
                 </a>
                 <span class="tooltip">MESSAGESs</span>
             </li>
             <li>
-                <a href="{% url 'borrowerlogout' %}" onclick="showForm('logout')" >
+                <a href="{% url 'logout' %}" onclick="showForm('logout')" >
                     <i class='bx bx-log-out' id="log_out"></i>
                     <span class="links_name">LOG OUT</span>
                 </a>

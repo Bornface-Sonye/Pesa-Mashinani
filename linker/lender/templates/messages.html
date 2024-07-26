@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f8;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            color: #555;
+            margin-top: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #e0e0e0;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Messages</h1>
+    
+    <!-- Loans Borrowed Table -->
+    <h2>Messages Recieved</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Message ID.</th>
+                <th>Message Number</th>
+                <th>Sender Username</th>
+                <th>Message Header</th>
+                <th>Message Content</th>
+                <th>Message Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mssg in received_mssgs %}
+                <tr>
+                    <td>{{ mssg.message_id }}</td>
+                    <td>{{ mssg.message_no }}</td>
+                    <td>{{ mssg.sender_username }}</td>
+                    <td>{{ mssg.message_name}}</td>
+                    <td>{{ mssg.message_description }}</td>
+                    <td>{{ mssg.message_date }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No messages found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Loans Lent Table -->
+    <h2>Messages Sent</h2>
+    <table>
+        <thead>
+            message_id = models.AutoField(primary_key=True, unique=True)
+    message_no = models.CharField(max_length=50, help_text="Enter Message Number")
+    sender_username = models.CharField(max_length=50, help_text="Enter Sender Username")
+    recipient_username = models.CharField(max_length=50, help_text="Enter Recipient Username")
+    message_name = models.CharField(max_length=50, help_text="Enter Message Name")
+    message_description = models.CharField(max_length=50, help_text="Enter Message Description")
+    message_date = models.DateField(help_text="Enter Date Sent")
+            <tr>
+                <th>Message ID.</th>
+                <th>Message Number</th>
+                <th>Recipient Username</th>
+                <th>Message Header</th>
+                <th>Message Content</th>
+                <th>Message Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mssg in sent_mssgs %}
+                <tr>
+                    <td>{{ mssg.message_id }}</td>
+                    <td>{{ mssg.message_no }}</td>
+                    <td>{{ mssg.recipient_username }}</td>
+                    <td>{{ mssg.message_name}}</td>
+                    <td>{{ mssg.message_description }}</td>
+                    <td>{{ mssg.message_date }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No sent messages found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

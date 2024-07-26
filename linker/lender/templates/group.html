@@ -122,13 +122,6 @@
                 <span class="tooltip">Search</span>
             </li>
             <li>
-                <a href="#">
-                    <i class='bx bx-grid-alt'></i>
-                    <span class="links_name">Dashboard</span>
-                </a>
-                <span class="tooltip">Dashboard</span>
-            </li>
-            <li>
                 <a href="{% url 'group_allocation' %}" onclick="loadContent('add_members.html')">
                     <i class='bx bx-chat'></i>
                     <span class="links_name">ALLOCATE LOAN</span>
@@ -171,7 +164,14 @@
                 <span class="tooltip">ADD MEMBERS</span>
             </li>
             <li>
-                <a href="{% url 'grouplogout' %}" onclick="showForm('logout')" >
+                <a href="{% url 'messages' %}" onclick="loadContent('messages')">
+                    <i class='bx bx-chat'></i>
+                    <span class="links_name">MESSAGES</span>
+                </a>
+                <span class="tooltip">MESSAGESs</span>
+            </li>
+            <li>
+                <a href="{% url 'logout' %}" onclick="showForm('logout')" >
                     <i class='bx bx-log-out' id="log_out"></i>
                     <span class="links_name">LOG OUT</span>
                 </a>

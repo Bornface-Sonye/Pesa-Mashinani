@@ -407,6 +407,14 @@ def generate_lender_number(email_address):
     unique_id = f"{local_part}/001/{current_year}@lender"
     return unique_id
 
+def generate_unique_message_number():
+    while True:
+        letters = ''.join(random.choices(string.ascii_uppercase, k=3))
+        digits = ''.join(random.choices(string.digits, k=3))
+        message_no = letters + digits
+        if not Message.objects.filter(message_no=message_no).exists():
+            return message_no
+
 def calculate_time_elapsed_in_months(disbursement_date):
     # Get the current date
     current_date = datetime.now().date()

@@ -125,6 +125,12 @@ from .models import GroupMember
 from datetime import datetime
 from .utils import generate_borrower_username, generate_unique_borrower_number
 
+from django.contrib.auth import logout as django_logout
+from django.shortcuts import redirect
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
+from django.urls import reverse
 
 import random
 import string
@@ -160,25 +166,17 @@ from django.views.generic import TemplateView
 class HelpPageView(TemplateView):
     template_name = 'help_page.html'  # Specify your template name here
 
-   
 
-def grouplogout(request):
-    if request.method == 'POST':
+class LogoutView(View):
+    """
+    Handle user logout via POST request to ensure CSRF protection.
+    """
+
+    @method_decorator(require_POST)
+    def post(self, request, *args, **kwargs):
         django_logout(request)
         return redirect('home')  # Redirect to home page after logout
-    return render(request, 'group.html') 
  
-def borrowerlogout(request):
-    if request.method == 'POST':
-        django_logout(request)
-        return redirect('home')  # Redirect to home page after logout
-    return render(request, 'borrower.html') 
-
-def banklogout(request):
-    if request.method == 'POST':
-        django_logout(request)
-        return redirect('home')  # Redirect to home page after logout
-    return render(request, 'bank.html') 
 
 class HomePage_View(View):
     def get(self,request):
@@ -1826,7 +1824,7 @@ class GroupDisbursementView(FormView):
         form.save()
 
         # Create and save the message
-        message_no = self.generate_unique_message_number()
+        message_no = generate_unique_message_number()
         message = Message(
             message_no=message_no,
             sender_username=lender.username,
@@ -1887,14 +1885,6 @@ class GroupDisbursementView(FormView):
             'transaction_no': transaction_no,
             'success_message': f'Disbursement successful. Transaction Number: {transaction_no}'
         })
-
-    def generate_unique_message_number(self):
-        while True:
-            letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-            digits = ''.join(random.choices(string.digits, k=3))
-            message_no = letters + digits
-            if not Message.objects.filter(message_no=message_no).exists():
-                return message_no
 
 
 class LoanPaymentView(View):
@@ -1975,9 +1965,26 @@ class LoanPaymentView(View):
             
             borrower_account.account_bal -= payment_amount
             borrower_account.save()
+
             # Update lender's and borrower's account balances
             lender_account.account_bal += payment_amount
             lender_account.save()
+
+            # Create and save the message
+            message_no = generate_unique_message_number()
+            message = Message(
+                message_no=message_no,
+                sender_username=lender.username,
+                recipient_username=borrower.username,
+                message_name='Payment Successfully Completed',
+                message_description=(
+                    f'Loan Payment for Disbursement Transaction Number {transaction_no} '
+                    f'amount {payment_amount} has been submitted. '
+                    f'Balance: {loan.balance}'
+                ),
+                message_date=timezone.now().date()
+            )
+            message.save()
 
             success_message = f'Payment of {payment_amount} received successfully. Loan balance updated.'
             return redirect(f'{reverse("payment", args=[transaction_no])}?success_message={success_message}')
@@ -2035,7 +2042,7 @@ class GroupLoanPaymentView(View):
                 borrower_id = borrower.national_id
                 member_account = get_object_or_404(GroupMember, national_id=borrower_id)
                 borrower_account = get_object_or_404(Account, account_no=member_account.account)
-                
+
             if borrower_account.account_bal < payment_amount:
                 return render(request, self.template_name, {
                     'loan': loan,
@@ -2044,7 +2051,7 @@ class GroupLoanPaymentView(View):
                     'error_message': 'You have Insufficient Account Balance to Complete this Transaction.'
                 })
 
-            lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)         
+            lender_account = get_object_or_404(Account, account_no=lender.account_no.account_no)
 
             # Update loan details
             interest_rate = loan.loan_interest
@@ -2069,12 +2076,29 @@ class GroupLoanPaymentView(View):
                 loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
-            
+
             borrower_account.account_bal -= payment_amount
             borrower_account.save()
-            # Update lender's and borrower's account balances
+
+            # Update lender's account balance
             lender_account.account_bal += payment_amount
             lender_account.save()
+
+            # Create and save the message
+            message_no = generate_unique_message_number()
+            message = Message(
+                message_no=message_no,
+                sender_username=lender.username,
+                recipient_username=borrower.username,
+                message_name='Payment Successfully Completed',
+                message_description=(
+                    f'Loan Payment for Disbursement Transaction Number {transaction_no} '
+                    f'amount {payment_amount} has been submitted. '
+                    f'Balance: {loan.balance}'
+                ),
+                message_date=timezone.now().date()
+            )
+            message.save()
 
             return render(request, self.template_name, {
                 'loan': loan,
@@ -2178,4 +2202,30 @@ class BorrowerLoansView(ListView):
         
         return render(request, self.template_name, {'loans_to_pay': loans_to_pay})
     
-    
+
+
+class MessagesListView(ListView):
+    template_name = 'messages.html'
+    context_object_name = 'messages'
+
+    def get(self, request):
+        # Check if user is logged in and retrieve their information
+        username = request.session.get('username')
+        if not username:
+            return redirect('group_login')  # Redirect to login if username is not in session
+        
+        # Initialize message lists as empty
+        received_mssgs = []
+        sent_mssgs = []
+
+        # Retrieve loans if borrower_no and lender_no are in session
+        if username:
+            received_mssgs = Message.objects.filter(recipient_username=username)
+        if lender_no:
+            sent_mssgs = Message.objects.filter(sender_username=username)
+
+        # Pass the loans to the template
+        return render(request, self.template_name, {
+            'received_mssgs': received_mssgs,
+            'sent_mssgs': sent_mssgs
+        })

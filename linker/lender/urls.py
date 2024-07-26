@@ -2,19 +2,20 @@ from django.urls import path
 from .views import (
     UserCreateView, BorrowerCreateView, EntrepreneurCreateView, CivilServantCreateView, EmployeeCreateView, UnemployedCreateView,
     GroupCreateView, LenderCreateView, BankCreateView, GroupLenderCreateView, HomePage_View, 
-    Borrower_Dashboard_View, Group_Dashboard_View, Bank_Dashboard_View, grouplogout, banklogout, borrowerlogout,  BorrowerGroupCreateView, SuccessView, 
+    Borrower_Dashboard_View, Group_Dashboard_View, Bank_Dashboard_View, BorrowerGroupCreateView, SuccessView, 
     AllocationView, RequestsView,  ApplicationView, DisbursementView, 
     AllocationsView, MemberListView, BankLoginView, GroupLoginView, BorrowerLoginView, BankSignUpView,
     BorrowerSignUpView, GroupSignUpView, AddGroupMemberView, MemberUpdateView, MemberDeleteView, AddGroupMemberView, 
     GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, 
     DefaulterDeleteView, GroupDisbursementView, LoanPaymentView, GroupLoansView, BankLoansView, 
     BorrowerLoansView, GroupLoanPaymentView, PesaSignUpView, PesaLoginView, Pesa_Dashboard_View, BorrowerListView, 
-    LenderListView, HelpPageView
+    LenderListView, HelpPageView, MessagesListView, LogoutView
 )
 
 urlpatterns = [
     path('', HomePage_View.as_view(), name='home'),
     path('help/', HelpPageView.as_view(), name='help-page'),
+    path('logout/', LogoutView.as_view(), name='logout'),LogoutView
     path('register_user/', UserCreateView.as_view(), name='register_user'),
     path('register_borrower/', BorrowerCreateView.as_view(), name='register_borrower'),
     path('register_entrepreneur/<int:borrower_id>/<str:username>/', EntrepreneurCreateView.as_view(), name='register_entrepreneur'),
@@ -43,12 +44,8 @@ urlpatterns = [
     path('defaulters/add/', DefaultersView.as_view(), name='add_defaulter'),
     path('defaulters/update/<int:pk>/', DefaulterUpdateView.as_view(), name='defaulter_update'),
     path('defaulters/delete/<int:pk>/', DefaulterDeleteView.as_view(), name='defaulter_delete'),
-    path('group/logout/', grouplogout, name='grouplogout'),
-    path('bank/logout/', banklogout, name='banklogout'),
-    path('borrower/logout/', borrowerlogout, name='borrowerlogout'),
     path('success/<str:username>/', SuccessView.as_view(), name='success'),
     path('bank/allocation/', AllocationView.as_view(), name='bank_allocation'),
-    #path('group/allocation/', GAllocationView.as_view(), name='group_allocation'),
     path('group/allocation/', GroupAllocationView.as_view(), name='group_allocation'),
     path('disbursement/<str:application_no>/', DisbursementView.as_view(), name='disbursement'),
     path('group_disbursement/<str:application_no>/', GroupDisbursementView.as_view(), name='group_disbursement'),
@@ -66,4 +63,5 @@ urlpatterns = [
     path('loans/', GroupLoansView.as_view(), name='loans'),
     path('bank_loans/', BankLoansView.as_view(), name='bank_loans'),
     path('borrower_loans/', BorrowerLoansView.as_view(), name='borrower_loans'),
+    path('messages/', MessagesListView.as_view(), name='messages'),
 ]

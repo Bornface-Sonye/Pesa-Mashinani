@@ -72,6 +72,10 @@
                         <a href="{% url 'delete_member' member.pk %}">Delete</a>
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10">No members found.</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
