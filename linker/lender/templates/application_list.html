@@ -44,6 +44,10 @@
                     <td>{{ application.application_date }}</td>
                     <td><a href="{% url 'disbursement' application.application_no %}">Disburse</a></td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No applications yet.</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>

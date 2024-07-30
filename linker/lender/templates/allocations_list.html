@@ -42,6 +42,10 @@
                     <td>{{ allocation.allocation_date }}</td>
                     <td><a href="{% url 'application' allocation.allocation_no %}">Apply</a></td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No allocations yet.</td>
+                </tr>
             {% endfor %}
         </tbody>
     </table>
