@@ -853,6 +853,9 @@ class AddGroupMemberView(View):
             return redirect('group_login')
 
         if form.is_valid():
+            account = form.cleaned_data.get('account')
+            first_name = form.cleaned_data.get('first_name')
+            last_name = form.cleaned_data.get('last_name')
             national_id = form.cleaned_data.get('national_id')
             if Defaulter.objects.filter(national_id=national_id).exists():
                 return render(request, 'add_group_member.html', {
@@ -865,6 +868,14 @@ class AddGroupMemberView(View):
                 group_member.member_no = generate_unique_member_number()  # Assign generated member number
                 group_member.group = group  # Assign the group fetched from the session
                 group_member.save()
+                
+                # Create and save the account
+                account = Account(
+                    account_no=account,
+                    account_name=f'{first_name}  {last_name}',
+                    account_bal=0.00,
+                )
+                account.save()
 
                 return render(request, 'add_group_member.html', {
                     'form': GroupMemberForm(),
@@ -1338,6 +1349,7 @@ class ApplicationView(FormView):
         
         # Assign account balance to member_balance
         member_balance = account.account_bal
+        loan =  get_object_or_404(Loan, borrower_no=borrower_no)
         
         # Fetch GroupLender object based on group_no
         #group_lender = get_object_or_404(GroupLender, group_no=group_member.group.group_no)
@@ -1377,12 +1389,14 @@ class ApplicationView(FormView):
         application.proposed_amount = result  # Assign the loan amount
         application.borrower_no = borrower_no  # Correctly assign the borrower object
         
-        if Loan.objects.filter(borrower_no=borrower_no).exists():
+        
+        # Check if the borrower has any unsettled loans with a balance above 0
+        if Loan.objects.filter(borrower_no=borrower_no, balance__gt=0).exists():
             return render(self.request, self.template_name, {
                 'form': form,
                 'allocation_no': allocation_no,
                 'error_application_no': application_no,
-                'error_message': 'You already have unsettled loan, Please settle you Loan First !'
+                'error_message': 'You already have unsettled loan(s). Please settle your loan(s) first!'
             })
         # Save the form instance
         application.save()
@@ -2225,3 +2239,18 @@ class MessagesListView(ListView):
             'received_mssgs': received_mssgs,
             'sent_mssgs': sent_mssgs
         })
+
+
+
+class PDFView(View):
+    def get(self, request, *args, **kwargs):
+        # Replace with actual report data
+        report_data = {}  # Provide necessary data if needed
+
+        pdf_generator = PDFGenerator(report_data)
+        pdf_bytes = pdf_generator.generate_pdf()
+
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="report.pdf"'
+        response['X-Stop-Progress'] = 'true'
+        return response

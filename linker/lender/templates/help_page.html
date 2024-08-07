@@ -1,5 +1,3 @@
-<!-- templates/help_page.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,49 +13,85 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Roboto', sans-serif;
             line-height: 1.6;
-            background-color: #f9f9f9;
+            background-color: #f4f4f4;
             color: #333;
             padding: 20px;
         }
 
         h1, h2, h3 {
-            color: #4CAF50;
+            color: #007BFF;
             margin-bottom: 10px;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .section {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .section h2 {
             margin-bottom: 15px;
+            font-size: 1.75rem;
         }
 
         .section p {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+
+        ol {
+            margin-left: 20px;
+        }
+
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
         }
 
         .footer {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
             font-size: 0.9em;
             color: #666;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .section h2 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -66,31 +100,79 @@
         <h1>Help Page</h1>
         
         <div class="section">
-            <h2>Section 1: Getting Started</h2>
-            <p>Placeholder for information about how to get started with the system.</p>
-            <p>Include introductory text, login procedures, and basic navigation tips.</p>
+            <h2>Getting Started</h2>
+            <p>Welcome to Pesa Mashinani! To get started:</p>
+            <ul>
+                <li>Register as a user by following the guidelines for your role (Group, Borrower, Bank).</li>
+                <li>Log in using the credentials provided upon registration.</li>
+                <li>Explore the dashboard to access various features and functionalities.</li>
+            </ul>
         </div>
         
         <div class="section">
-            <h2>Section 2: Account Management</h2>
-            <p>Placeholder for account-related help, such as updating user information.</p>
-            <p>Details about changing passwords, managing profiles, and security tips.</p>
+            <h2>Account Management</h2>
+            <p>For managing your account:</p>
+            <ul>
+                <li><strong>Changing Password:</strong> Navigate to your profile settings to update your password.</li>
+                <li><strong>Updating Profile:</strong> Go to the profile section to update your personal details.</li>
+                <li><strong>Security Tips:</strong> Use a strong password and enable two-factor authentication if available.</li>
+            </ul>
         </div>
         
         <div class="section">
-            <h2>Section 3: System Features</h2>
-            <p>Placeholder for help regarding different features available in the system.</p>
-            <p>Include instructions on using the main functionalities and tools.</p>
+            <h2>System Features</h2>
+            <p>Explore the key features of Pesa Mashinani:</p>
+            <ul>
+                <li><strong>Borrower Interface:</strong> Register, apply for loans, view loan details, and make repayments.</li>
+                <li><strong>Group Interface:</strong> Manage group operations, allocate and disburse loans, update member details, and view financial transactions.</li>
+                <li><strong>Bank Interface:</strong> Register, allocate loan amounts, provide interest rates, and list defaulters.</li>
+                <li><strong>Admin Interface:</strong> Register and manage groups, borrowers, and lenders. Generate usernames, and handle system-wide operations.</li>
+            </ul>
         </div>
         
         <div class="section">
-            <h2>Section 4: Troubleshooting</h2>
-            <p>Placeholder for troubleshooting common issues and FAQs.</p>
-            <p>Provide solutions for known problems and contact information for support.</p>
+            <h2>Guidelines for Registration</h2>
+            <h3>For Groups</h3>
+            <ol>
+                <li><a href="link-to-guarantor-form">Download the Guarantor Form</a>.</li>
+                <li>Complete the form and get it signed and stamped by a guarantor.</li>
+                <li>Submit the signed form to the Pesa Mashinani registration office.</li>
+                <li>Upon successful registration, you will receive a username.</li>
+                <li>Use the username to sign up and create your account, then log in and start using the system.</li>
+            </ol>
+
+            <h3>For Banks</h3>
+            <ol>
+                <li><a href="link-to-bank-registration-form">Download the Bank Registration Form</a>.</li>
+                <li>Fill out and sign the form with the necessary stamp.</li>
+                <li>Submit the form to the Pesa Mashinani registration office.</li>
+                <li>After registration, you will receive a username.</li>
+                <li>Create your account using the provided username, then log in to start using the system.</li>
+            </ol>
+
+            <h3>For Borrowers</h3>
+            <ol>
+                <li><a href="link-to-borrower-registration-form">Download the Borrower Registration Form</a>.</li>
+                <li>Complete the form with the required personal information.</li>
+                <li>Submit the form along with any required documents (e.g., identification, proof of group membership) to the Pesa Mashinani registration office.</li>
+                <li>After successful registration, you will receive a username.</li>
+                <li>Use the username to sign up and create your account, then log in and start using the system.</li>
+            </ol>
+        </div>
+        
+        <div class="section">
+            <h2>Troubleshooting</h2>
+            <p>If you encounter issues:</p>
+            <ul>
+                <li><strong>Login Problems:</strong> Ensure your username and password are correct. If issues persist, use the "Forgot Password" option or contact support.</li>
+                <li><strong>Technical Issues:</strong> Clear your browser cache or try using a different browser. Contact support if problems continue.</li>
+                <li><strong>Documentation Errors:</strong> Check for missing or incorrect information and resubmit the required forms.</li>
+            </ul>
+            <p>For further assistance, contact our support team at <a href="mailto:support@pesamashinani.com">support@pesamashinani.com</a>.</p>
         </div>
 
         <div class="footer">
-            <p>© 2024 Your Company. All rights reserved.</p>
+            <p>© 2024 Pesa Mashinani. All rights reserved.</p>
         </div>
     </div>
 </body>

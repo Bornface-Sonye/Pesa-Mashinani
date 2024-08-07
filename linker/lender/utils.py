@@ -301,6 +301,175 @@ class LoanProposal:
         return float(f"{self.predictions[0]:.2f}")
 
 
+import os
+import platform
+from io import BytesIO
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from pypdf import PdfReader, PdfWriter
+
+class PDFGenerator:
+    def __init__(self, report_data):
+        self.report_data = report_data
+        self.buffer = BytesIO()
+        self.pdf_canvas = SimpleDocTemplate(
+            self.buffer, pagesize=landscape(letter)
+        )
+        self.styles = getSampleStyleSheet()
+        self.style_normal = self.styles["Normal"]
+        self.style_heading = self.styles["Heading1"]
+
+        self.style_centered = ParagraphStyle(
+            "Centered",
+            parent=self.styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=14,
+            alignment=1,  # Center align text
+            spaceAfter=12,
+        )
+
+        self.style_section_heading = ParagraphStyle(
+            "SectionHeading",
+            parent=self.styles["Heading1"],
+            fontName="Helvetica-Bold",
+            fontSize=14,
+            alignment=0,
+            spaceAfter=12,
+        )
+
+        self.style_label = ParagraphStyle(
+            "Label",
+            parent=self.styles["Normal"],
+            fontName="Helvetica-Bold",
+            fontSize=12,
+            alignment=0,
+            spaceAfter=3,
+        )
+
+        self.style_fill = ParagraphStyle(
+            "Fill",
+            parent=self.styles["Normal"],
+            fontName="Helvetica",
+            fontSize=12,
+            alignment=0,
+            spaceAfter=3,
+        )
+
+    def _draw_form(self, canvas, form_data):
+        x = 1 * inch
+        y = landscape(letter)[1] - 2.5 * inch
+
+        column_width = (landscape(letter)[0] - 2 * inch) / 2
+        line_width = column_width - 0.25 * inch
+
+        column_x_positions = [x + i * column_width for i in range(2)]
+
+        for section_title, fields in form_data.items():
+            canvas.showPage()
+
+            header_text = "Header Information:\n\n\n"
+            header_paragraph = Paragraph(header_text, self.style_centered)
+            header_width, header_height = header_paragraph.wrapOn(canvas, landscape(letter)[0] - 2 * inch, 0)
+            header_paragraph.drawOn(canvas, (landscape(letter)[0] - header_width) / 2, landscape(letter)[1] - header_height - 0.5 * inch)
+
+            y = landscape(letter)[1] - 2.5 * inch
+
+            section_paragraph = Paragraph(section_title, self.style_section_heading)
+            section_width, section_height = section_paragraph.wrapOn(canvas, landscape(letter)[0] - 2 * inch, 0)
+            section_paragraph.drawOn(canvas, x, y)
+            y -= section_height + 0.5 * inch
+
+            for index, field_label in enumerate(fields):
+                column = index % 2
+                row = index // 2
+                x_pos = column_x_positions[column]
+                y_pos = y - (row * 0.5 * inch)
+
+                label_text = f"{field_label} _____________________________"
+                label_paragraph = Paragraph(label_text, self.style_label)
+                label_width, label_height = label_paragraph.wrapOn(canvas, line_width, 0)
+                label_paragraph.drawOn(canvas, x_pos, y_pos)
+
+            y -= (row + 1) * 0.5 * inch + 0.5 * inch
+
+            stamp_text = "Official Stamp:"
+            stamp_paragraph = Paragraph(stamp_text, self.style_fill)
+            stamp_width, stamp_height = stamp_paragraph.wrapOn(canvas, landscape(letter)[0] - 2 * inch, 0)
+            stamp_paragraph.drawOn(canvas, x, y)
+            y -= stamp_height + 0.1 * inch
+
+            stamp_box_x = x
+            stamp_box_y = y - 0.5 * inch
+            stamp_box_width = column_width - 0.25 * inch
+            stamp_box_height = 0.5 * inch
+
+            canvas.setStrokeColor(colors.black)
+            canvas.setFillColor(colors.white)
+            canvas.rect(stamp_box_x, stamp_box_y, stamp_box_width, stamp_box_height, fill=1)
+
+            y -= stamp_box_height + 0.5 * inch
+
+    def _remove_empty_pages(self, pdf_bytes_io):
+        pdf_reader = PdfReader(pdf_bytes_io)
+        pdf_writer = PdfWriter()
+
+        for page in pdf_reader.pages:
+            if not self._is_page_empty(page):
+                pdf_writer.add_page(page)
+
+        new_pdf_bytes_io = BytesIO()
+        pdf_writer.write(new_pdf_bytes_io)
+        new_pdf_bytes_io.seek(0)
+        return new_pdf_bytes_io.getvalue()
+
+    def _is_page_empty(self, page):
+        return not page.extract_text().strip()
+
+    def generate_pdf(self):
+        self.style_normal.fontName = "Helvetica"
+        self.style_heading.fontName = "Helvetica"
+        self.style_normal.fontSize = 12
+        self.style_heading.fontSize = 14
+
+        form_data = {
+            "Part I: Guarantor Information": [
+                "First Name:",
+                "Second Name:",
+                "Last Name:",
+                "ID No:",
+                "Place to Sign:",
+                "Date:",
+            ],
+            "Part II: Additional Information": [
+                "First Name:",
+                "Second Name:",
+                "Last Name:",
+                "ID No:",
+                "Place to Sign:",
+                "Date:",
+            ],
+            "Part III: Official Use": [
+                "First Name:",
+            ],
+        }
+
+        elements = [Spacer(1, 0.5 * inch)]
+
+        def on_page(canvas, doc):
+            self._draw_form(canvas, form_data)
+
+        self.pdf_canvas.build(elements, onFirstPage=on_page, onLaterPages=on_page)
+
+        pdf_bytes = self.buffer.getvalue()
+        self.buffer.close()
+
+        # Remove empty pages from the generated PDF
+        return self._remove_empty_pages(BytesIO(pdf_bytes))
+
+
 def generate_number():
     """Generate a random 10-character alphanumeric allocation number."""
     letters = string.ascii_uppercase
