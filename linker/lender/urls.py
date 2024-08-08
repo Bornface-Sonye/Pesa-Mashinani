@@ -9,12 +9,15 @@ from .views import (
     GroupAllocationView, GroupApplicationView, GroupAllocationsView, DefaultersView, DefaulterListView, DefaulterUpdateView, 
     DefaulterDeleteView, GroupDisbursementView, LoanPaymentView, GroupLoansView, BankLoansView, 
     BorrowerLoansView, GroupLoanPaymentView, PesaSignUpView, PesaLoginView, Pesa_Dashboard_View, BorrowerListView, 
-    LenderListView, HelpPageView, MessagesListView, LogoutView
+    LenderListView, HelpPageView, MessagesListView, LogoutView, GuarantorFormView, GroupMemberShipFormView, BankShipFormView
 )
 
 urlpatterns = [
     path('', HomePage_View.as_view(), name='home'),
     path('help/', HelpPageView.as_view(), name='help-page'),
+    path('guarantor/form/', GuarantorFormView.as_view(), name='guarantor-form'),
+    path('group/form/', GroupMemberShipFormView.as_view(), name='group-form'),
+    path('bank/form/', BankShipFormView.as_view(), name='bank-form'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('register_user/', UserCreateView.as_view(), name='register_user'),
     path('register_borrower/', BorrowerCreateView.as_view(), name='register_borrower'),

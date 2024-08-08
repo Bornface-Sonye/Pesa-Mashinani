@@ -544,3 +544,26 @@ class DefaulterUpdateForm(forms.ModelForm):
     class Meta:
         model = Defaulter
         fields = ['amount_owed']
+
+
+class GuarantorForm(forms.Form):
+    national_id = forms.DecimalField(
+        max_digits=8,
+        decimal_places=0,
+        help_text="Enter Guarantor Identification Number",
+        widget=forms.NumberInput(attrs={'class': 'black-input-box'})
+    )
+
+class GroupMemmberShipForm(forms.Form):
+    group_no = forms.CharField(
+        max_length=50,
+        help_text="Enter Group Number",
+        widget=forms.TextInput(attrs={'class': 'black-input-box'})
+    )
+    
+class BankShipForm(forms.Form):
+    bank_name = forms.CharField(
+        max_length=50,
+        help_text="Enter Bank Operational Name",
+        widget=forms.TextInput(attrs={'class': 'black-input-box'})
+    )

@@ -1,0 +1,24 @@
+{% extends 'base1.html' %}
+{% block content %}
+<div class="form-container">
+    <h1 class="page-title">Bank Agreement/Registration Form</h1>
+    <form method="post" action="{% url 'bank-form' %}">
+        {% csrf_token %}
+        
+        <!-- Form Fields Section -->
+        <div class="form-section">
+            <div class="form-field">
+                <label for="{{ form.bank_name.id_for_label }}" class="required">Bank Operational Name:</label>
+                {{ form.bank_name }}
+                {{ form.bank_name.errors }}
+                <input type="text" name="bank_name" class="serial-input" required>
+            </div><br>
+        </div>
+        <div class="form-buttons">
+            <button type="submit" class="generate-button">Generate Form</button>
+            <a href="{% url 'help-page' %}" class="return-button">Return to Help Page</a>
+            <button type="reset" class="gray-button">Clear</button>
+        </div>            
+    </form>
+</div>
+{% endblock %}

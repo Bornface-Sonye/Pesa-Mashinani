@@ -1,0 +1,37 @@
+{% extends 'base1.html' %}
+{% block content %}
+<div class="form-container">
+    <h1 class="page-title">Group Guarantee Form</h1>
+    <form method="post" action="{% url 'guarantor-form' %}">
+        {% csrf_token %}
+        
+        <!-- Payment Information Section -->
+        <div class="form-section">
+            <div class="form-field">
+                <label for="{{ form.national_id.id_for_label }}" class="required">National Identification Number:</label>
+                {{ form.national_id }}
+                {{ form.national_id.errors }}
+                <input type="number" name="national_id" class="serial-input" required>
+            </div><br>
+        </div>
+        <div class="form-buttons">
+            <button type="submit" class="generate-button">Generate Form</button>
+            <a href="{% url 'help-page' %}" class="return-button">Return to Help Page</a>
+            <button type="reset" class="gray-button">Clear</button>
+        </div>            
+    </form>
+</div>
+<!--
+<h2>Guarantor Form</h2>
+<!-- Display progress report details here -->
+<!--
+<form method="post" action="{% url 'guarantor-form' %}" class="report-form">
+    {% csrf_token %}
+    <label for="national_id">National Identification Number:</label>
+    <input type="text" name="serial_number" class="serial-input" required>
+    <div class="button-container">
+<button type="submit" class="generate-button">Generate Form</button>
+<a href="{% url 'home' %}" class="return-button">Return to Home</a>
+    </div>
+</form> -->
+{% endblock %}

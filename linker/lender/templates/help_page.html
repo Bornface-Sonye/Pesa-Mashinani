@@ -1,9 +1,13 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Help Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="icon" href="{% static 'img/logo.ico' %}" type="image/x-icon">
     <style>
         /* Basic CSS Reset */
         * {
@@ -79,6 +83,27 @@
             color: #666;
         }
 
+        .contact-info {
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+
+        .contact-info p {
+            margin-bottom: 10px;
+        }
+
+        .map-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #007BFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .map-link:hover {
+            text-decoration: underline;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .container {
@@ -101,7 +126,7 @@
         
         <div class="section">
             <h2>Getting Started</h2>
-            <p>Welcome to Pesa Mashinani! To get started:</p>
+            <p>Welcome to Pesa Mashinani!<br> To get started:</p>
             <ul>
                 <li>Register as a user by following the guidelines for your role (Group, Borrower, Bank).</li>
                 <li>Log in using the credentials provided upon registration.</li>
@@ -113,9 +138,9 @@
             <h2>Account Management</h2>
             <p>For managing your account:</p>
             <ul>
-                <li><strong>Changing Password:</strong> Navigate to your profile settings to update your password.</li>
-                <li><strong>Updating Profile:</strong> Go to the profile section to update your personal details.</li>
-                <li><strong>Security Tips:</strong> Use a strong password and enable two-factor authentication if available.</li>
+                <li><strong>Changing Password:</strong> Navigate to your profile settings to update your password. If you encounter any issues, please contact our support team at <a href="mailto:bornfacesonye@gmail.com">bornfacesonye@gmail.com</a> or call <a href="tel:+254798073204">+254 798 073 204</a> for assistance.</li>
+                <li><strong>Updating Profile:</strong> Go to the profile section to update your personal details. For any difficulties, reach out to our support team at <a href="mailto:bornfacesonye@gmail.com">bornfacesonye@gmail.com</a> or call <a href="tel:+254798073204">+254 798 073 204</a> for help.</li>
+                <li><strong>Security Tips:</strong> Use a strong password and enable two-factor authentication if available to enhance your account security.</li>
             </ul>
         </div>
         
@@ -134,7 +159,7 @@
             <h2>Guidelines for Registration</h2>
             <h3>For Groups</h3>
             <ol>
-                <li><a href="link-to-guarantor-form">Download the Guarantor Form</a>.</li>
+                <li><a href="{% url 'guarantor-form' %}">Download the Guarantor Form</a>.</li>
                 <li>Complete the form and get it signed and stamped by a guarantor.</li>
                 <li>Submit the signed form to the Pesa Mashinani registration office.</li>
                 <li>Upon successful registration, you will receive a username.</li>
@@ -143,7 +168,7 @@
 
             <h3>For Banks</h3>
             <ol>
-                <li><a href="link-to-bank-registration-form">Download the Bank Registration Form</a>.</li>
+                <li><a href="{% url 'bank-form' %}">Download the Bank Registration Form</a>.</li>
                 <li>Fill out and sign the form with the necessary stamp.</li>
                 <li>Submit the form to the Pesa Mashinani registration office.</li>
                 <li>After registration, you will receive a username.</li>
@@ -152,7 +177,7 @@
 
             <h3>For Borrowers</h3>
             <ol>
-                <li><a href="link-to-borrower-registration-form">Download the Borrower Registration Form</a>.</li>
+                <li><a href="{% url 'group-form' %}">Download the Borrower Registration Form</a>.</li>
                 <li>Complete the form with the required personal information.</li>
                 <li>Submit the form along with any required documents (e.g., identification, proof of group membership) to the Pesa Mashinani registration office.</li>
                 <li>After successful registration, you will receive a username.</li>
@@ -167,8 +192,17 @@
                 <li><strong>Login Problems:</strong> Ensure your username and password are correct. If issues persist, use the "Forgot Password" option or contact support.</li>
                 <li><strong>Technical Issues:</strong> Clear your browser cache or try using a different browser. Contact support if problems continue.</li>
                 <li><strong>Documentation Errors:</strong> Check for missing or incorrect information and resubmit the required forms.</li>
+                <li><strong>Changing Password:</strong> Navigate to your profile settings to update your password. For assistance, contact our support team at <a href="mailto:bornfacesonye@gmail.com">bornfacesonye@gmail.com</a> or call <a href="tel:+254798073204">+254 798 073 204</a>.</li>
+                <li><strong>Updating Profile:</strong> Go to the profile section to update your personal details. For help, reach out to our support team at <a href="mailto:bornfacesonye@gmail.com">bornfacesonye@gmail.com</a> or call <a href="tel:+254798073204">+254 798 073 204</a>.</li>
             </ul>
-            <p>For further assistance, contact our support team at <a href="mailto:support@pesamashinani.com">support@pesamashinani.com</a>.</p>
+        </div>
+
+        <div class="section contact-info">
+            <h2>Contact Information</h2>
+            <p><strong>Address:</strong> P.O. Box 138, Sare Awendo, North Sakwa Ward, Nyakuru Village</p>
+            <p><strong>Phone:</strong> <a href="tel:+254798073204">+254 798 073 204</a></p>
+            <p><strong>Email:</strong> <a href="mailto:bornfacesonye@gmail.com">bornfacesonye@gmail.com</a></p>
+            <p><strong>Location on Google Maps:</strong> <a href="https://www.google.com/maps/place/Nyakuru+Village,+North+Sakwa+Ward,+Awendo" class="map-link" target="_blank">View on Google Maps</a></p>
         </div>
 
         <div class="footer">

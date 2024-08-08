@@ -1,29 +1,12 @@
 from .utils import *
-from django.views import View
-from django.shortcuts import render
-from django.http import HttpResponse
+
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.views.generic.edit import CreateView
-from django.urls import reverse, reverse_lazy
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import System_User
-from django.views.generic import TemplateView
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from .models import GroupMember
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import Borrower
-from django.views.generic import FormView
+
+from django.views.generic import UpdateView
+from django.views.generic import DeleteView
 from django.views.generic import ListView
-from django.views.generic.edit import FormView
-from django.views.generic import ListView
-from .models import Disbursement, Payment
-from django.urls import reverse_lazy
-from .forms import ApplicationForm
-from .models import Application
+
 from django import forms
 from django.db import models
 from django.db.models import Sum
@@ -31,74 +14,17 @@ from decimal import Decimal
 
 
 from django.views.generic.edit import FormView
-from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy
 from django.utils import timezone
-from .models import Borrower, Application, GroupMember, Group, Account, Allocation, Lender, GroupLender, Message
-from .forms import ApplicationForm
-import random
-import string
+
+
+from django.urls import reverse_lazy
+from django.views import View
+from django.contrib import messages
+
 from django.db import models
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import FormView
-from datetime import datetime
-from .models import Disbursement, Application
-from django.utils import timezone
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
-from .models import Application, Allocation, Account, Borrower, Lender, Group, Message, Disbursement
-from .forms import DisbursementForm
 from django.db.models import DecimalField
 from django.core.exceptions import ValidationError
-import random
-import string
-
-from django.shortcuts import redirect, render
-from django.views import View
-from .models import GroupMember, System_User, Borrower, Group, Defaulter
-from .forms import GroupMemberForm
-from .utils import generate_unique_member_number  # Ensure this utility function is defined
-
-from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy
-from django.views.generic.edit import FormView
-from django.utils import timezone
 from django.db.models import Sum
-import random
-import string
-
-from .models import Application, Allocation, Borrower, Group, Lender, Message
-from .forms import ApplicationForm
-
-
-from django.shortcuts import render, get_object_or_404
-from django.views.generic.edit import FormView
-from .forms import ApplicationForm
-from .models import GroupMember, Group, Borrower, Allocation, Account, GroupLender
-from django.urls import reverse_lazy
-from datetime import datetime
-
-from django.shortcuts import render, redirect
-from django.views.generic.edit import FormView
-from django.urls import reverse_lazy
-from .forms import ApplicationForm
-from .models import Allocation, Application, Borrower, GroupMember, Group, Account, GroupLender
-from datetime import datetime
-import random
-from django.views.generic import TemplateView
-import string
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views import View
-from django.contrib import messages
-from .models import Defaulter
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views import View
-from django.contrib import messages
-from .models import Defaulter
-from .forms import DefaulterUpdateForm
-
 import string
 import random
 from datetime import datetime
@@ -108,8 +34,6 @@ import uuid
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
-from django.contrib.auth import logout as django_logout
-from django.shortcuts import render, redirect,get_object_or_404
 from tabulate import tabulate
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib import colors
@@ -118,33 +42,15 @@ from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, Paragraph
 
-from django.shortcuts import render, redirect
-from django.views import View
-from .forms import BorrowerForm
-from .models import GroupMember
-from datetime import datetime
-from .utils import generate_borrower_username, generate_unique_borrower_number
-
 from django.contrib.auth import logout as django_logout
-from django.shortcuts import redirect
-from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
-import random
-import string
 from django.utils import timezone
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import System_User, Message, GroupMember  # Ensure to import the relevant models
-from .forms import GroupMemberForm  # Ensure to import the relevant forms
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import CreateView
-from .models import GroupMember
 
 from django.views.generic import CreateView, TemplateView
-from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.models import User
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
@@ -154,14 +60,10 @@ from .models import (
 
 
 from .forms import BorrowerForm, EntrepreneurForm, CivilServantForm, EmployeeForm, UnemployedForm, GroupForm
-from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementForm, GroupMemberForm
-from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm, PesaSignUpForm
+from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementForm, GroupMemberForm, GuarantorForm
+from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm, PesaSignUpForm, GroupMemmberShipForm
 from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm, DefaulterForm,  DefaulterUpdateForm, PaymentForm
 
-
-# views.py
-
-from django.views.generic import TemplateView
 
 class HelpPageView(TemplateView):
     template_name = 'help_page.html'  # Specify your template name here
@@ -2241,16 +2143,82 @@ class MessagesListView(ListView):
         })
 
 
+class GuarantorFormView(View):
+    def get(self, request):
+        return render(request, 'guarantor_form.html')
 
-class PDFView(View):
-    def get(self, request, *args, **kwargs):
-        # Replace with actual report data
-        report_data = {}  # Provide necessary data if needed
+    def post(self, request):
+        national_id = request.POST.get('national_id')
+        try:
+            guarantor = Guarantor.objects.get(national_id=national_id)
+        except Guarantor.DoesNotExist:
+            return render(request, 'guarantor_form.html', {'error_message': f'Guarantor with National Identification Number "{national_id}" not found.'})
 
+        report_data = {
+            'guarantor_details': {
+                'National ID Number': guarantor.national_id,
+                'First Name': guarantor.guarantor_first_name,
+            },
+            'last_name': guarantor.guarantor_last_name,
+            'phone_number': guarantor.phone_number,
+        }
+
+        # Generate PDF
         pdf_generator = PDFGenerator(report_data)
         pdf_bytes = pdf_generator.generate_pdf()
 
+        # Return the PDF file as a response
+        response = HttpResponse(pdf_bytes, content_type='form/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{guarantor.guarantor_first_name} {guarantor.guarantor_last_name}_form.pdf"'
+        return response
+    
+class BankShipFormView(View):
+    def get(self, request):
+        return render(request, 'bank_form.html')
+
+    def post(self, request):
+        bank_name = request.POST.get('bank_name')
+        report_data = {
+            'bank_name': bank_name,
+        }
+
+        # Generate PDF
+        pdf_generator = PDFGenerator(report_data)
+        pdf_bytes = pdf_generator.generate_pdf()
+
+        # Return the PDF file as a response
+        response = HttpResponse(pdf_bytes, content_type='form/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{bank_name}_form.pdf"'
+        return response
+    
+    
+
+
+class GroupMemberShipFormView(View):
+    def get(self, request):
+        return render(request, 'borrower_registration_form.html')
+
+    def post(self, request):
+        group_no = request.POST.get('group_no')
+        try:
+            group = Group.objects.get(group_no=group_no)
+        except Group.DoesNotExist:
+            return render(request, 'borrower_registration_form.html', {'error_message': f'Group with Group Number "{group_no}" not found.'})
+
+        report_data = {
+            'group_details': {
+                'Group Number': group.group_no,
+                'Group Name': group.group_name,
+            },
+            'group': group.group_name,
+            'phone_number': group.phone_number,
+        }
+
+        # Generate PDF
+        pdf_generator = PDFGeneratora(report_data)
+        pdf_bytes = pdf_generator.generate_pdf()
+
+        # Return the PDF file as a response
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="report.pdf"'
-        response['X-Stop-Progress'] = 'true'
+        response['Content-Disposition'] = f'attachment; filename="{group.group_name}_form.pdf"'
         return response

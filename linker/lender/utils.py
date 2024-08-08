@@ -1,43 +1,13 @@
-import string
-import random
-from django.views.generic import UpdateView
-from django.views.generic import DeleteView
-from .utils import *
 from django.views import View
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.urls import reverse
 from django.http import HttpResponseRedirect
-from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
 from django.shortcuts import render, redirect
-from django.views import View
-from .models import System_User
-from django.views.generic import FormView
-from django.views.generic import ListView
 from django.views.generic.edit import FormView
-from django.views.generic import ListView
-from .models import Disbursement, Payment
-from django.urls import reverse_lazy
-from .forms import ApplicationForm
-from .models import Application
-from datetime import datetime
 from decimal import Decimal
 
-
-
-#Machine Learning imports;
-
-import os
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-
-
-from sklearn.metrics import classification_report
-import joblib
 
 import string
 import random
@@ -59,10 +29,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, Paragraph
 
 
-
-from django.views.generic import CreateView, TemplateView
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.models import User
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
     CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, System_User,
@@ -72,34 +38,8 @@ from .models import (
 
 from .forms import BorrowerForm, EntrepreneurForm, CivilServantForm, EmployeeForm, UnemployedForm, GroupForm
 from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementForm, GroupMemberForm
-from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerGroupForm, UserForm
+from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerGroupForm, UserForm, GuarantorForm
 
-from django.views import View
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from django.views.generic.edit import CreateView
-from django.urls import reverse, reverse_lazy
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import System_User
-from django.views.generic import TemplateView
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
-from .models import GroupMember
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import Borrower
-from django.views.generic import FormView
-from django.views.generic import ListView
-from django.views.generic.edit import FormView
-from django.views.generic import ListView
-from .models import Disbursement, Payment
-from django.urls import reverse_lazy
-from .forms import ApplicationForm
-from .models import Application
-from datetime import datetime
 
 
 import string
@@ -112,7 +52,6 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.contrib.auth import logout as django_logout
-from django.shortcuts import render, redirect,get_object_or_404
 from tabulate import tabulate
 from reportlab.lib.pagesizes import landscape, letter
 from reportlab.lib import colors
@@ -120,23 +59,6 @@ from reportlab.lib.units import inch
 from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, Paragraph
-
-
-import random
-import string
-from django.utils import timezone
-from django.shortcuts import render, redirect
-from django.views import View
-from .models import System_User, Message, GroupMember  # Ensure to import the relevant models
-from .forms import GroupMemberForm  # Ensure to import the relevant forms
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import CreateView
-from .models import GroupMember
-
-from django.views.generic import CreateView, TemplateView
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.models import User
-from django.views import View
 
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
@@ -150,18 +72,11 @@ from .forms import AllocationForm, PaymentForm, ApplicationForm, DisbursementFor
 from .forms import LenderForm, BankForm, GroupLenderForm, BorrowerSignUpForm, BankSignUpForm
 from .forms import GroupSignUpForm, LoginForm, BorrowerGroupForm, UserForm
 
-
+#Machine Learning imports;
 import os
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-import joblib
-
-import os
-import pandas as pd
-import numpy as np
+from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
@@ -299,6 +214,211 @@ class LoanProposal:
 
         # Return only the predicted ProposedAmt value formatted to two decimal places
         return float(f"{self.predictions[0]:.2f}")
+
+
+
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Flowable
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor, lightgrey
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from io import BytesIO
+
+
+class PDFGeneratora:
+    def __init__(self, report_data):
+        self.report_data = report_data
+
+    def generate_pdf(self):
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Define custom styles
+        custom_styles = self.create_custom_styles()
+
+        # Add header
+        header = self.create_header(custom_styles)
+        elements.extend(header)  # Use extend to add multiple elements
+
+        # Add form sections
+        elements.append(Spacer(1, 24))  # Add more space
+        self.add_section_one(elements, custom_styles)
+        elements.append(Spacer(1, 24))  # Add more space
+        self.add_section_two(elements, custom_styles)
+        elements.append(Spacer(1, 24))  # Add more space
+        self.add_section_three(elements, custom_styles)
+
+        # Add decorative borders and watermark
+        doc.build(elements, onFirstPage=self.add_decorations, onLaterPages=self.add_decorations)
+
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        return pdf_bytes
+
+    def create_custom_styles(self):
+        # Define custom styles with attractive fonts and colors
+        custom_styles = {
+            'title': ParagraphStyle(
+                'title',
+                fontName='Helvetica-Bold',
+                fontSize=18,
+                textColor=HexColor('#003366'),  # Dark blue
+                alignment=1,  # Center alignment
+                spaceAfter=12,
+            ),
+            'header': ParagraphStyle(
+                'header',
+                fontName='Helvetica-Bold',
+                fontSize=14,
+                textColor=HexColor('#003366'),  # Dark blue text
+                spaceAfter=6,
+                spaceBefore=6,
+                alignment=1,  # Center alignment
+            ),
+            'normal': ParagraphStyle(
+                'normal',
+                fontName='Helvetica',
+                fontSize=12,
+                textColor=HexColor('#333333'),  # Dark grey text
+                spaceAfter=12,  # Add more space after
+            ),
+            'highlight': ParagraphStyle(
+                'highlight',
+                fontName='Helvetica-Bold',
+                fontSize=12,
+                textColor=HexColor('#003366'),  # Dark blue text
+                spaceAfter=12,  # Add more space after
+            ),
+        }
+        return custom_styles
+
+    def create_header(self, styles):
+        # Header with group information
+        header_content = [
+            Paragraph('PESA MASHINANI', styles['header']),
+            Paragraph('Group Membership Registration Form', styles['header']),
+            Spacer(1, 24),  # Add more space
+            Spacer(1, 24),
+            Paragraph(f"Group Name: <u>{self.report_data['group_details']['Group Name']}</u>", styles['normal']),
+            Paragraph(f"Group Number: <u>{self.report_data['group_details']['Group Number']}</u>", styles['normal']),
+        ]
+        return header_content
+
+    def add_section_one(self, elements, styles):
+        section_title = Paragraph("Section 1: Personal Information", styles['title'])
+        elements.append(section_title)
+
+        # Add labeled lines for user input with highlighted placeholders
+        elements.append(Paragraph("Name: <u>_____________________________</u>", styles['highlight']))
+        elements.append(Paragraph("Date of Birth: <u>_________________________</u>", styles['highlight']))
+        elements.append(Paragraph("Nationality: <u>___________________________</u>", styles['highlight']))
+
+    def add_section_two(self, elements, styles):
+        section_title = Paragraph("Section 2: Contact Information", styles['title'])
+        elements.append(section_title)
+
+        # Add labeled lines for user input with highlighted placeholders
+        elements.append(Paragraph(f"Phone Number: <u>{self.report_data['phone_number']}</u>", styles['highlight']))
+        elements.append(Paragraph("Email Address: <u>________________________</u>", styles['highlight']))
+        elements.append(Paragraph("Address: <u>____________________________</u>", styles['highlight']))
+
+    def add_section_three(self, elements, styles):
+        section_title = Paragraph("Section 3: Guarantor Information", styles['title'])
+        elements.append(section_title)
+
+        # Add labeled lines for user input with highlighted placeholders
+        elements.append(Paragraph(f"Group Name: <u>{self.report_data['group']}</u>", styles['highlight']))
+        elements.append(Paragraph("Guarantor Phone: <u>_____________________</u>", styles['highlight']))
+        elements.append(Paragraph("Guarantor Email: <u>_____________________</u>", styles['highlight']))
+
+        # Ensure the stamp field has enough space
+        elements.append(Spacer(1, 12))  # Add space before the stamp box
+        elements.append(Paragraph("Stamp:", styles['highlight']))
+        elements.append(Spacer(1, 2))
+        elements.append(StampBox())  # Add the custom stamp box flowable
+
+    def add_decorations(self, canvas, doc):
+        # Add watermark
+        canvas.saveState()
+        canvas.setFont('Helvetica', 60)
+        canvas.setStrokeColor(HexColor('#003366'))  # Dark blue
+        canvas.setFillColor(lightgrey)
+        canvas.rotate(45)
+        canvas.drawString(100, 0, "PESA MASHINANI")
+        canvas.restoreState()
+
+        # Add flower-like decorative borders
+        self.add_flower_border(canvas, doc)
+
+    def add_flower_border(self, canvas, doc):
+        # Define flower color and position
+        flower_color = HexColor('#003366')  # Dark blue
+
+        # Draw flowers on corners
+        canvas.saveState()
+        canvas.setStrokeColor(flower_color)
+        canvas.setFillColor(flower_color)
+
+        # Flower pattern coordinates
+        flower_size = 10
+
+        # Top-left corner
+        canvas.circle(20, doc.height - 20, flower_size, stroke=1, fill=1)
+
+        # Top-right corner
+        canvas.circle(doc.width - 20, doc.height - 20, flower_size, stroke=1, fill=1)
+
+        # Bottom-left corner
+        canvas.circle(20, 20, flower_size, stroke=1, fill=1)
+
+        # Bottom-right corner
+        canvas.circle(doc.width - 20, 20, flower_size, stroke=1, fill=1)
+
+        canvas.restoreState()
+
+        # Add border to the edges of the PDF
+        border_color = HexColor('#ff6600')  # Orange color for border
+        border_thickness = 2
+
+        # Draw border
+        canvas.saveState()
+        canvas.setStrokeColor(border_color)
+        canvas.setLineWidth(border_thickness)
+
+        # Top border
+        canvas.line(0, doc.height, doc.width, doc.height)
+
+        # Bottom border
+        canvas.line(0, 0, doc.width, 0)
+
+        # Left border
+        canvas.line(0, 0, 0, doc.height)
+
+        # Right border
+        canvas.line(doc.width, 0, doc.width, doc.height)
+
+        canvas.restoreState()
+
+
+class StampBox(Flowable):
+    def __init__(self, width=2 * inch, height=1 * inch):
+        super().__init__()
+        self.width = width
+        self.height = height
+
+    def draw(self):
+        # Draw the stamp box
+        self.canv.setStrokeColor(HexColor('#003366'))  # Dark blue
+        self.canv.setFillColor(lightgrey)
+        self.canv.rect(0, 0, self.width, self.height, fill=1)
+
+
+
+
 
 
 import os

@@ -8,7 +8,7 @@
     <title>PESA MASHINANI</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <!-- Include Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="{% static 'img/logo.ico' %}" type="image/x-icon">
     <!-- Link to the stylesheet -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -90,7 +90,7 @@
             <nav>
                 <ul>
                     <h1 style="margin-right: 50px;">PESA MASHINANI</h1>
-                    <li style="margin-right: 50px;"><a href="#home"><i class="fas fa-home"></i><br>Home</a></li>
+                    <li style="margin-right: 50px;"><a href="{% url 'help-page' %}"><i class="fas fa-home"></i><br>Help</a></li>
                     <li style="margin-right: 50px;"><a href="{% url 'pesa_login' %}"><i class="fas fa-university"></i><br>Mashinani Admin</a></li>
                     <li style="margin-right: 50px;"><a href="{% url 'bank_login' %}"><i class="fas fa-university"></i><br>Bank</a></li>
                     <li style="margin-right: 50px;"><a href="{% url 'group_login' %}"><i class="fas fa-users"></i><br>Group</a></li>
