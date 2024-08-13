@@ -55,7 +55,7 @@ from django.contrib.auth.models import User
 from .models import (
     Constituency, Ward, SubLocation, Borrower, Entrepreneur,Company, Commission,
     CivilServant, Employee, Unemployed, Group, BorrowerGroup, Lender, Bank, GroupLender, Allocation, System_User,
-    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan
+    Application, Disbursement, Payment, Guarantor, County, Account, GroupMember, Message, Defaulter, Loan, Loanee
 )
 
 
@@ -1300,8 +1300,9 @@ class ApplicationView(FormView):
         application.borrower_no = borrower_no  # Correctly assign the borrower object
         
         
-        # Check if the borrower has any unsettled loans with a balance above 0
-        if Loan.objects.filter(borrower_no=borrower_no).exists():
+        # Check if the borrower has any unsettled loans with a balance above 0   
+        loanee = get_object_or_404(Loanee, borrower_no=borrower_no)    
+        if loanee.approved != Loanee.YES:
             return render(self.request, self.template_name, {
                 'form': form,
                 'allocation_no': allocation_no,
@@ -1423,12 +1424,15 @@ class GroupApplicationView(FormView):
         form.instance.application_date = timezone.now().date()
         form.instance.proposed_amount = proposed_amount
         form.instance.borrower_no = borrower_no
-        if Loan.objects.filter(borrower_no=borrower_no).exists():
+        
+        # Check if the borrower has any unsettled loans with a balance above 0   
+        loanee = get_object_or_404(Loanee, borrower_no=borrower_no)    
+        if loanee.approved != 'YES':
             return render(self.request, self.template_name, {
                 'form': form,
                 'allocation_no': allocation_no,
                 'error_application_no': application_no,
-                'error_message': 'You already have unsettled loan, Please settle you Loan First !'
+                'error_message': 'You already have unsettled loan(s). Please settle your loan(s) first!'
             })
             
         # Save the application instance
@@ -1904,7 +1908,7 @@ class LoanPaymentView(View):
                     'error_message': error_message,
                 })
                 
-            if entered_amount < 1.00:
+            if payment_amount < 1.00:
                 error_message = 'Payment amount should be Kshs 1 and above.'
                 return render(self.request, self.template_name, {
                     'loan': loan,
@@ -1920,7 +1924,7 @@ class LoanPaymentView(View):
                 loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
-            if loan.balance = 0:
+            if loan.balance == 0:
                 loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
                 loanee.approved = 'YES'
                 loanee.save()
@@ -2033,7 +2037,7 @@ class GroupLoanPaymentView(View):
                     'error_message': 'Payment amount exceeds the current loan balance.'
                 })
                 
-            if entered_amount < 1.00:
+            if payment_amount < 1.00:
                 error_message = 'Payment amount should be Kshs 1 and above.'
                 return render(self.request, self.template_name, {
                     'loan': loan,
@@ -2048,7 +2052,7 @@ class GroupLoanPaymentView(View):
                 loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
-            if loan.balance = 0:
+            if loan.balance == 0:
                 loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
                 loanee.approved = 'YES'
                 loanee.save()
