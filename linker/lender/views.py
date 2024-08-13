@@ -1251,7 +1251,7 @@ class ApplicationView(FormView):
         
         # Assign account balance to member_balance
         member_balance = account.account_bal
-        loan =  get_object_or_404(Loan, borrower_no=borrower_no)
+        #loan =  get_object_or_404(Loan, borrower_no=borrower_no)
         
         # Fetch GroupLender object based on group_no
         #group_lender = get_object_or_404(GroupLender, group_no=group_member.group.group_no)
@@ -1293,13 +1293,14 @@ class ApplicationView(FormView):
         
         
         # Check if the borrower has any unsettled loans with a balance above 0
-        if Loan.objects.filter(borrower_no=borrower_no, balance__gt=0).exists():
+        if Loan.objects.filter(borrower_no=borrower_no).exists():
             return render(self.request, self.template_name, {
                 'form': form,
                 'allocation_no': allocation_no,
                 'error_application_no': application_no,
                 'error_message': 'You already have unsettled loan(s). Please settle your loan(s) first!'
             })
+        
         # Save the form instance
         application.save()
         
@@ -1421,6 +1422,7 @@ class GroupApplicationView(FormView):
                 'error_application_no': application_no,
                 'error_message': 'You already have unsettled loan, Please settle you Loan First !'
             })
+            
         # Save the application instance
         application = form.save()
 
@@ -1544,6 +1546,14 @@ class DisbursementView(FormView):
         entered_amount = form.cleaned_data.get('disbursed_amount')
         if entered_amount > proposed_amount:
             entered_amount = proposed_amount
+            
+        if entered_amount < 100.00:
+            return render(self.request, self.template_name, {
+                'form': form,
+                'application_no': application_no,
+                'error_transaction_no': form.cleaned_data.get('transaction_no', None),
+                'error_message': 'You can not Disburse Amount less than Kshs 100'
+            })
 
         # Determine the borrower's account based on the borrower type
         if borrower.borrower_type == 'group':
@@ -1692,7 +1702,16 @@ class GroupDisbursementView(FormView):
         # Check if the entered amount is valid
         entered_amount = form.cleaned_data.get('disbursed_amount')
         if entered_amount > proposed_amount:
-            entered_amount = proposed_amount        
+            entered_amount = proposed_amount 
+            
+        if entered_amount < 100.00:
+            return render(self.request, self.template_name, {
+                'form': form,
+                'application_no': application_no,
+                'error_transaction_no': form.cleaned_data.get('transaction_no', None),
+                'error_message': 'You can not Disburse Amount less than Kshs 100'
+            })
+       
         
         # Determine the borrower's account based on the borrower type
         if borrower.borrower_type == 'group':
@@ -1867,6 +1886,16 @@ class LoanPaymentView(View):
                     'transaction_no': transaction_no,
                     'error_message': error_message,
                 })
+                
+            if entered_amount < 1.00:
+                error_message = 'Payment amount should be Kshs 1 and above.'
+                return render(self.request, self.template_name, {
+                    'loan': loan,
+                    'form': form,
+                    'transaction_no': transaction_no,
+                    'error_message': error_message,
+                })
+
 
             loan.amount_paid += payment_amount
             loan.balance = loan.principal_interest - loan.amount_paid
@@ -1981,6 +2010,15 @@ class GroupLoanPaymentView(View):
                     'transaction_no': transaction_no,
                     'error_message': 'Payment amount exceeds the current loan balance.'
                 })
+                
+            if entered_amount < 1.00:
+                error_message = 'Payment amount should be Kshs 1 and above.'
+                return render(self.request, self.template_name, {
+                    'loan': loan,
+                    'form': form,
+                    'transaction_no': transaction_no,
+                    'error_message': error_message,
+                })
 
             loan.amount_paid += payment_amount
             loan.balance = loan.principal_interest - loan.amount_paid
@@ -1988,6 +2026,7 @@ class GroupLoanPaymentView(View):
                 loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
+            delete_zero_balance_loans()
 
             borrower_account.account_bal -= payment_amount
             borrower_account.save()
@@ -2164,7 +2203,7 @@ class GuarantorFormView(View):
         }
 
         # Generate PDF
-        pdf_generator = PDFGenerator(report_data)
+        pdf_generator = GroupPDFGenerator(report_data)
         pdf_bytes = pdf_generator.generate_pdf()
 
         # Return the PDF file as a response
@@ -2183,7 +2222,7 @@ class BankShipFormView(View):
         }
 
         # Generate PDF
-        pdf_generator = PDFGenerator(report_data)
+        pdf_generator = BankPDFGenerator(report_data)
         pdf_bytes = pdf_generator.generate_pdf()
 
         # Return the PDF file as a response
@@ -2215,7 +2254,7 @@ class GroupMemberShipFormView(View):
         }
 
         # Generate PDF
-        pdf_generator = PDFGeneratora(report_data)
+        pdf_generator = PDFGenerator(report_data)
         pdf_bytes = pdf_generator.generate_pdf()
 
         # Return the PDF file as a response
