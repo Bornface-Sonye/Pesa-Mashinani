@@ -148,6 +148,14 @@ class BorrowerCreateView(View):
             borrower.borrower_no = borrower_no
             borrower.save()
             
+            # Create and save the payment
+            borrower_no = borrower_no
+            loanee = Loanee(
+                borrower_no=borrower_no,
+                approved = 'YES'
+            )
+            loanee.save()
+            
             if borrower_type == 'entrepreneur':
                 return redirect('register_entrepreneur', borrower_id=national_id_no, username=username)
             elif borrower_type == 'civil_servant':
@@ -1596,6 +1604,10 @@ class DisbursementView(FormView):
         form.instance.disbursement_date = datetime.now().date()
 
         form.save()
+        
+        loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
+        loanee.approved = 'NO'
+        loanee.save()
 
         # Create and save the message
         message_no = self.generate_unique_message_number()
@@ -1753,6 +1765,11 @@ class GroupDisbursementView(FormView):
         form.instance.disbursement_date = timezone.now().date()
 
         form.save()
+        
+        loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
+        loanee.approved = 'NO'
+        loanee.save()
+
 
         # Create and save the message
         message_no = generate_unique_message_number()
@@ -1903,6 +1920,11 @@ class LoanPaymentView(View):
                 loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
+            if loan.balance = 0:
+                loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
+                loanee.approved = 'YES'
+                loanee.save()
+
             
             borrower_account.account_bal -= payment_amount
             borrower_account.save()
@@ -2026,7 +2048,10 @@ class GroupLoanPaymentView(View):
                 loan.balance = 0  # Ensure balance does not go below 0
             loan.loan_date = datetime.now().date()
             loan.save()
-            delete_zero_balance_loans()
+            if loan.balance = 0:
+                loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
+                loanee.approved = 'YES'
+                loanee.save()
 
             borrower_account.account_bal -= payment_amount
             borrower_account.save()

@@ -904,8 +904,3 @@ def calculate_compound_interest(principal, monthly_rate, number_of_months):
         amount = principal * (1 + monthly_rate / 100) ** number_of_months
         
         return amount
-    
-    
-def delete_zero_balance_loans():
-    zero_balance_loans = Loan.objects.filter(balance=0)
-    zero_balance_loans.delete()

@@ -402,3 +402,25 @@ class Loan(models.Model):
 
     def __str__(self):
         return f"Loan - {self.transaction_no}"
+    
+class Loanee(models.Model):
+    loanee_id = models.AutoField(primary_key=True, unique=True)
+    borrower_no = models.CharField(max_length=30, help_text="Enter the Transaction Number")
+    YES = 'yes'
+    NO = 'no'
+    APPROVAL_CHOICES = [
+        (YES, 'Yes'),
+        (NO, 'No'),
+    ]
+
+    approved = models.CharField(
+        max_length=3,
+        choices=APPROVAL_CHOICES,
+        default=YES,
+        help_text="Is borrower approved"
+
+    )
+    
+    def __str__(self):
+        return f"Loanee - {self.borrower_no} - Approved - {self.approved}"  
+
