@@ -1,0 +1,50 @@
+/* here you can put your own css to customize and override the theme */
+html, body, div, table, button, input, select, select.options, select.selected, a,
+ol, ul, li, textarea, .dropdown-menu.dropdown-menu-default,
+.dropdown-menu-list, .btn, .btn-group, .input-group, .select2 {
+    font-family: "Averta", sans-serif !important;
+    font-weight: normal;
+    font-style: normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Averta", sans-serif !important;
+    font-weight: normal;
+    font-style: normal;
+}
+
+.page-header.navbar .page-logo {
+    float: left;
+    display: block;
+    width: 235px;
+    height: 30px;
+    padding-left: 5px;
+    padding-right: 15px
+}
+
+.page-header.navbar .page-logo .logo-default {
+    margin: 1px 0 0
+}
+
+table {
+    table-layout: fixed;
+}
+
+.no_wrap {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.wrap_notes {
+    max-width: 300px;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+}
+
+table.dataTable tbody td {
+    word-break: break-word;
+    vertical-align: top;
+}

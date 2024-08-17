@@ -1302,12 +1302,20 @@ class ApplicationView(FormView):
         
         # Check if the borrower has any unsettled loans with a balance above 0   
         loanee = get_object_or_404(Loanee, borrower_no=borrower_no)    
-        if loanee.approved != Loanee.YES:
+        if loanee.approved != 'YES':
             return render(self.request, self.template_name, {
                 'form': form,
                 'allocation_no': allocation_no,
                 'error_application_no': application_no,
                 'error_message': 'You already have unsettled loan(s). Please settle your loan(s) first!'
+            })
+            
+        if loanee.applied != 'NO':
+            return render(self.request, self.template_name, {
+                'form': form,
+                'allocation_no': allocation_no,
+                'error_application_no': application_no,
+                'error_message': 'You already have an hanging application. Please be patient, Your Loan will be Disbursed soon!'
             })
         
         # Save the form instance
@@ -1435,6 +1443,14 @@ class GroupApplicationView(FormView):
                 'error_message': 'You already have unsettled loan(s). Please settle your loan(s) first!'
             })
             
+        if loanee.applied != 'NO':
+            return render(self.request, self.template_name, {
+                'form': form,
+                'allocation_no': allocation_no,
+                'error_application_no': application_no,
+                'error_message': 'You already have an hanging application. Please be patient, Your Loan will be Disbursed soon!'
+            })
+            
         # Save the application instance
         application = form.save()
 
@@ -1508,13 +1524,19 @@ class RequestsView(ListView):
             
             # Extract allocation numbers
             allocation_numbers = allocations.values_list('allocation_no', flat=True)
+
+            # Get applications related to these allocations and exclude those with disbursements
+            applications_without_disbursement = Application.objects.filter(
+                allocation_no__in=allocation_numbers
+            ).exclude(
+                application_no__in=Disbursement.objects.values_list('application_no', flat=True)
+            )
             
-            # Get applications related to these allocations
-            return Application.objects.filter(allocation_no__in=allocation_numbers)
+            return applications_without_disbursement
         else:
-            # If lender_no is not in the session, handle according to your application needs
-            # For example, return an empty queryset or handle the case appropriately
+            # If lender_no is not in the session, handle appropriately
             return Application.objects.none()  # No applications listed if lender_no is not in session
+
 
 
 class DisbursementView(FormView):
@@ -1611,6 +1633,7 @@ class DisbursementView(FormView):
         
         loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
         loanee.approved = 'NO'
+        loanee.applied = 'NO'
         loanee.save()
 
         # Create and save the message
@@ -1772,6 +1795,7 @@ class GroupDisbursementView(FormView):
         
         loanee = get_object_or_404(Loanee, borrower_no=borrower_no)
         loanee.approved = 'NO'
+        loanee.applied = 'NO'
         loanee.save()
 
 

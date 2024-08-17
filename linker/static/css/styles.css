@@ -1,0 +1,285 @@
+/* Reset default margin and padding */
+body, h1, h2, h3, p, ul {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0; /* Light gray background */
+    min-height: 100vh; /* Ensure full viewport height */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header styles */
+header {
+    background-color: #08021a;
+    color: #fff;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add shadow for depth */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000; /* Ensure header stays above other content */
+}
+
+header h1 {
+    margin: 10px; /* Reset margin */
+}
+
+header nav ul {
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+}
+
+header nav ul li {
+    margin-right: 15px; /* Adjust spacing between header links */
+}
+
+header nav ul li:first-child {
+    margin-right: auto; /* Push the first element to the left */
+}
+
+header nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center icon and text vertically */
+}
+
+header nav ul li a i {
+    margin-bottom: 5px; /* Space between icon and text */
+    font-size: 24px; /* Adjust icon size */
+}
+
+header nav ul li a:hover {
+    color: #ccc; /* Change color on hover */
+}
+
+/* Main content styles */
+main {
+    padding-top: 80px; /* Adjust according to header height */
+    padding-bottom: 100px; /* Adjust according to footer height */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 180px); /* Adjust for header and footer height */
+}
+
+/* Footer styles */
+footer {
+    background-color: #0d041f;
+    color: #fff;
+    padding: 10px;
+    text-align: left;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000; /* Ensure footer stays above other content */
+}
+
+footer p {
+    font-size: 16px;
+    margin: 5px 0; /* Adjust spacing around copyright text */
+}
+
+/* Section styles */
+section {
+    padding: 40px;
+    margin-bottom: 40px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 800px;
+    text-align: center;
+}
+
+section h2 {
+    font-size: 36px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+section p {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #666;
+}
+
+/* Newsletter Section Styles */
+.newsletter {
+    background-color: #EF3B2D;
+    color: #fff;
+    text-align: center;
+    padding: 60px 0;
+    animation: fadeIn 1s ease-in-out;
+    width: 100%;
+}
+
+.newsletter-title {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    animation: slideInUp 1s ease-in-out;
+}
+
+.newsletter-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    animation: slideInUp 1s ease-in-out;
+}
+
+.input-email {
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    width: 300px;
+    font-size: 18px;
+}
+
+.subscribe-btn {
+    background-color: #fff;
+    color: #EF3B2D;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 18px;
+}
+
+.subscribe-btn:hover {
+    background-color: #333;
+    color: #fff;
+    animation: bounce 0.5s ease-in-out;
+}
+
+/* General section styles */
+.container {
+    margin-bottom: 40px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.container h2 {
+    margin-bottom: 10px;
+}
+
+.container p {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #666;
+}
+
+/* Highlighted text */
+.highlight-text {
+    color: #009688;
+}
+
+/* Contact info styles */
+.contact-info {
+    text-align: center;
+}
+
+.contact-info .icon {
+    margin-right: 5px;
+    font-size: 20px;
+}
+
+/* Newsletter form styles */
+.input-email {
+    padding: 10px;
+    width: 300px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.subscribe-btn {
+    padding: 10px 30px;
+    background-color: #EF3B2D;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.subscribe-btn:hover {
+    background-color: #D63028;
+}
+
+/* Social icons */
+.social-icons {
+    display: flex;
+    margin-top: 10px; /* Adjust spacing above social icons */
+}
+
+.social-icons a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 20px;
+    margin: 0 10px; /* Adjust spacing between social icons */
+    transition: color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center icon and text vertically */
+}
+
+.social-icons a i {
+    margin-bottom: 5px; /* Space between icon and text */
+    font-size: 24px; /* Adjust icon size */
+}
+
+.social-icons a:hover {
+    color: #ccc; /* Change color on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    header h1 {
+        margin-left: 0; /* Adjust header title position */
+        margin-bottom: 10px; /* Space between title and nav */
+    }
+
+    header nav ul {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    header nav ul li {
+        margin-right: 0;
+        margin-bottom: 10px; /* Adjust spacing between header links */
+    }
+
+    header nav ul li:first-child {
+        margin-top: 10px;
+        margin-left: 0; /* Reset margin for first link */
+    }
+}
+
+

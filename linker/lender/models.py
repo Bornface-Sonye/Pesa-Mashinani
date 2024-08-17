@@ -420,6 +420,13 @@ class Loanee(models.Model):
         help_text="Is borrower approved"
 
     )
+    applied = models.CharField(
+        max_length=3,
+        choices=APPROVAL_CHOICES,
+        default=NO,
+        help_text="Does borrower has an hanging application"
+
+    )
     
     def __str__(self):
         return f"Loanee - {self.borrower_no} - Approved - {self.approved}"  
