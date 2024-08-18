@@ -34,13 +34,6 @@ import uuid
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.crypto import get_random_string
-from tabulate import tabulate
-from reportlab.lib.pagesizes import landscape, letter
-from reportlab.lib import colors
-from reportlab.lib.units import inch
-from io import BytesIO
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Spacer, Table, TableStyle, Paragraph
 
 from django.contrib.auth import logout as django_logout
 from django.utils.decorators import method_decorator
